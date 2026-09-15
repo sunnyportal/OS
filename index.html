@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Portal - 智慧導航主頁</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 15% 15%, #131722 0%, #0a0c10 100%);
+      --card-bg: rgba(26, 32, 44, 0.65);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-hover-border: rgba(99, 102, 241, 0.4);
+      --card-hover-bg: rgba(35, 43, 60, 0.85);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --gemini-glow: rgba(59, 130, 246, 0.2);
+      --chatgpt-glow: rgba(16, 185, 129, 0.2);
+      --claude-glow: rgba(217, 119, 6, 0.2);
+      --deepseek-glow: rgba(14, 165, 233, 0.2);
+      --search-bg: rgba(17, 24, 39, 0.75);
+      --search-border: rgba(255, 255, 255, 0.12);
+      --tag-bg: rgba(255, 255, 255, 0.06);
+      --tag-active-bg: #4f46e5;
+      --tag-active-text: #ffffff;
+      --modal-bg: #1e2533;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="light"] {
+      --bg-gradient: radial-gradient(circle at 15% 15%, #f0f4ff 0%, #e2e8f0 100%);
+      --card-bg: rgba(255, 255, 255, 0.8);
+      --card-border: rgba(0, 0, 0, 0.06);
+      --card-hover-border: rgba(99, 102, 241, 0.5);
+      --card-hover-bg: #ffffff;
+      --text-main: #1f2937;
+      --text-muted: #4b5563;
+      --text-dim: #9ca3af;
+      --search-bg: rgba(255, 255, 255, 0.9);
+      --search-border: rgba(0, 0, 0, 0.1);
+      --tag-bg: rgba(0, 0, 0, 0.05);
+      --modal-bg: #ffffff;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+      background: var(--bg-gradient);
+      min-height: 100vh;
+      color: var(--text-main);
+      padding: 30px 24px 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background lights */
+    .ambient-glow {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(0, 0, 0, 0) 70%);
+      top: -150px;
+      left: -150px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .ambient-glow-2 {
+      position: fixed;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+      bottom: -100px;
+      right: -100px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1280px;
+      z-index: 1;
+      position: relative;
+    }
+
+    /* Header Bar */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+      color: #fff;
+    }
+
+    .brand-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #ffffff, #9ca3af);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    [data-theme="light"] .brand-title {
+      background: linear-gradient(to right, #111827, #4b5563);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .clock-display {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--card-bg);
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+    }
+
+    .action-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .action-btn:hover {
+      background: var(--card-hover-bg);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    /* Hero Search & Prompt Launcher */
+    .hero-search-box {
+      background: var(--card-bg);
+      border: 1px solid var(--search-border);
+      border-radius: 20px;
+      padding: 22px;
+      margin-bottom: 30px;
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 18px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .main-search-input {
+      width: 100%;
+      background: var(--search-bg);
+      border: 1px solid var(--search-border);
+      border-radius: 14px;
+      padding: 14px 18px 14px 50px;
+      font-size: 1.05rem;
+      color: var(--text-main);
+      outline: none;
+      font-family: inherit;
+    }
+
+    .main-search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .search-input-shortcut {
+      position: absolute;
+      right: 16px;
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Prompt Launch Bar Buttons */
+    .prompt-launcher-buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .launcher-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-right: 4px;
+    }
+
+    .launch-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .launch-btn:hover {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .launch-btn.gemini:hover {
+      background: #1a73e8;
+      border-color: #1a73e8;
+      box-shadow: 0 4px 12px var(--gemini-glow);
+    }
+
+    .launch-btn.chatgpt:hover {
+      background: #10a37f;
+      border-color: #10a37f;
+      box-shadow: 0 4px 12px var(--chatgpt-glow);
+    }
+
+    .launch-btn.claude:hover {
+      background: #d97706;
+      border-color: #d97706;
+      box-shadow: 0 4px 12px var(--claude-glow);
+    }
+
+    .launch-btn.deepseek:hover {
+      background: #0284c7;
+      border-color: #0284c7;
+      box-shadow: 0 4px 12px var(--deepseek-glow);
+    }
+
+    .launch-btn.perplexity:hover {
+      background: #0d9488;
+      border-color: #0d9488;
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+    }
+
+    /* Category Filter Tabs */
+    .filter-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: none;
+    }
+
+    .filter-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-btn {
+      padding: 8px 18px;
+      border-radius: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: inherit;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .tab-btn.active {
+      background: var(--tag-active-bg);
+      color: var(--tag-active-text);
+      border-color: var(--tag-active-bg);
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .tab-count {
+      font-size: 0.75rem;
+      padding: 1px 6px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.15);
+      margin-left: 2px;
+    }
+
+    /* Grid Section */
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 16px;
+      margin-bottom: 34px;
+    }
+
+    /* AI Card */
+    .ai-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px 18px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      min-height: 120px;
+    }
+
+    .ai-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .ai-card:hover {
+      background: var(--card-hover-bg);
+      border-color: var(--card-hover-border);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.45);
+    }
+
+    .ai-card:hover::before {
+      opacity: 1;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .card-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+
+    .card-icon svg, .card-icon img {
+      width: 24px;
+      height: 24px;
+    }
+
+    .card-info h3 {
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.2;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-hot {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .badge-new {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-custom {
+      background: rgba(168, 85, 247, 0.2);
+      color: #c084fc;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pin-btn, .delete-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      padding: 4px;
+      cursor: pointer;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pin-btn:hover {
+      color: #eab308;
+      background: rgba(234, 179, 8, 0.15);
+    }
+
+    .pin-btn.pinned {
+      color: #eab308;
+    }
+
+    .delete-btn:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.15);
+    }
+
+    .card-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .card-tags {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .card-tag {
+      background: var(--tag-bg);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    .card-arrow {
+      color: var(--text-dim);
+      transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .ai-card:hover .card-arrow {
+      color: var(--accent);
+      transform: translateX(3px);
+    }
+
+    /* Add Card Button */
+    .add-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px dashed var(--card-border);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      min-height: 120px;
+      text-decoration: none;
+    }
+
+    .add-card:hover {
+      background: rgba(99, 102, 241, 0.05);
+      border-color: var(--accent);
+      color: var(--text-main);
+      transform: translateY(-2px);
+    }
+
+    .add-card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--tag-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Help Banner */
+    .chrome-tip-banner {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 14px;
+      padding: 14px 20px;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .chrome-tip-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.9rem;
+      color: var(--text-main);
+    }
+
+    .tip-btn {
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .tip-btn:hover {
+      background: #4338ca;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--modal-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 500px;
+      padding: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .close-modal {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      background: var(--search-bg);
+      border: 1px solid var(--search-border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      outline: none;
+      font-family: inherit;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--accent);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .modal-btn {
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .modal-btn-cancel {
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+    }
+
+    .modal-btn-submit {
+      background: var(--accent);
+      border: none;
+      color: #fff;
+    }
+
+    .guide-step {
+      margin-bottom: 14px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--text-main);
+    }
+
+    .guide-step strong {
+      color: #818cf8;
+    }
+
+    .copy-path-box {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      word-break: break-all;
+      margin: 8px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid var(--card-border);
+    }
+
+    .copy-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 50px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-dim);
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 20px 14px 40px;
+      }
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
+      .prompt-launcher-buttons {
+        gap: 6px;
+      }
+      .launch-btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow"></div>
+  <div class="ambient-glow-2"></div>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="logo-section">
+        <div class="logo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">AI Portal</div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="clock-display" id="clock">00:00:00</div>
+        <button class="action-btn" id="themeToggle" title="切換深淺模式">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+        <button class="action-btn" id="guideBtn" onclick="openGuideModal()" title="設定為 Chrome 起始頁教學">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Prompt Launcher / Search Box -->
+    <div class="hero-search-box">
+      <div class="search-input-wrapper">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="searchInput" class="main-search-input" placeholder="輸入問題或提示詞 (Prompt)，點擊下方直接發送至 AI..." autofocus>
+        <span class="search-input-shortcut">/ 鍵聚焦</span>
+      </div>
+
+      <div class="prompt-launcher-buttons">
+        <span class="launcher-label">直達提問：</span>
+        <button class="launch-btn gemini" onclick="launchAI('gemini')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#388bfd">
+            <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/>
+          </svg>
+          Google Gemini
+        </button>
+        <button class="launch-btn chatgpt" onclick="launchAI('chatgpt')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#10a37f">
+            <circle cx="12" cy="12" r="10"/>
+          </svg>
+          ChatGPT
+        </button>
+        <button class="launch-btn claude" onclick="launchAI('claude')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#d97706">
+            <circle cx="12" cy="12" r="9"/>
+          </svg>
+          Claude
+        </button>
+        <button class="launch-btn deepseek" onclick="launchAI('deepseek')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#0284c7">
+            <circle cx="12" cy="12" r="9"/>
+          </svg>
+          DeepSeek
+        </button>
+        <button class="launch-btn perplexity" onclick="launchAI('perplexity')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#0d9488">
+            <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+          </svg>
+          Perplexity
+        </button>
+        <button class="launch-btn" onclick="launchAI('google')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          Google 搜尋
+        </button>
+      </div>
+    </div>
+
+    <!-- Category Filter Tabs -->
+    <div class="filter-tabs" id="categoryTabs">
+      <button class="tab-btn active" data-category="all">
+        全部模型
+        <span class="tab-count" id="count-all">0</span>
+      </button>
+      <button class="tab-btn" data-category="pinned">
+        ⭐ 我的常用
+        <span class="tab-count" id="count-pinned">0</span>
+      </button>
+      <button class="tab-btn" data-category="chat">
+        💬 旗艦對話
+        <span class="tab-count" id="count-chat">0</span>
+      </button>
+      <button class="tab-btn" data-category="search">
+        🔍 搜尋研究
+        <span class="tab-count" id="count-search">0</span>
+      </button>
+      <button class="tab-btn" data-category="dev">
+        💻 程式開發
+        <span class="tab-count" id="count-dev">0</span>
+      </button>
+      <button class="tab-btn" data-category="media">
+        🎨 繪圖影音
+        <span class="tab-count" id="count-media">0</span>
+      </button>
+      <button class="tab-btn" data-category="work">
+        ⚡ 辦公生產力
+        <span class="tab-count" id="count-work">0</span>
+      </button>
+    </div>
+
+    <!-- AI Grid Container -->
+    <div class="section-title">
+      <span id="currentCategoryTitle">所有 AI 工具</span>
+      <span style="font-size: 0.82rem; color: var(--text-dim); font-weight: normal;">點擊直接開啟新分頁</span>
+    </div>
+
+    <div class="card-grid" id="aiGrid">
+      <!-- Generated dynamically -->
+    </div>
+
+    <!-- Chrome Startup Setup Tip Banner -->
+    <div class="chrome-tip-banner">
+      <div class="chrome-tip-content">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <div>
+          <strong>想讓 Chrome 一開啟就自動顯示這個導航頁？</strong>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">只需將本檔案設定為 Chrome 的「起始網頁」即可！</div>
+        </div>
+      </div>
+      <button class="tip-btn" onclick="openGuideModal()">查看設定步驟</button>
+    </div>
+
+    <footer>
+      AI Portal Dashboard • 輕量、快速、免伺服器 • 隨開即用
+    </footer>
+  </div>
+
+  <!-- Add Custom AI Modal -->
+  <div class="modal-backdrop" id="addModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">新增自訂 AI 工具</div>
+        <button class="close-modal" onclick="closeAddModal()">&times;</button>
+      </div>
+      <form id="customAiForm">
+        <div class="form-group">
+          <label class="form-label">工具名稱 *</label>
+          <input type="text" id="customName" class="form-input" placeholder="例如：Sora, Suno, Cursor..." required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">網站網址 (URL) *</label>
+          <input type="url" id="customUrl" class="form-input" placeholder="https://..." required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">功能簡介</label>
+          <input type="text" id="customDesc" class="form-input" placeholder="一句話描述這個工具的特色...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">分類類別</label>
+          <select id="customCategory" class="form-select">
+            <option value="chat">💬 旗艦對話</option>
+            <option value="search">🔍 搜尋研究</option>
+            <option value="dev">💻 程式開發</option>
+            <option value="media">🎨 繪圖影音</option>
+            <option value="work">⚡ 辦公生產力</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="modal-btn modal-btn-cancel" onclick="closeAddModal()">取消</button>
+          <button type="submit" class="modal-btn modal-btn-submit">確認新增</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Chrome Setup Guide Modal -->
+  <div class="modal-backdrop" id="guideModal">
+    <div class="modal-box" style="max-width: 580px;">
+      <div class="modal-header">
+        <div class="modal-title">📌 如何讓 Chrome 開啟時自動打開此頁面？</div>
+        <button class="close-modal" onclick="closeGuideModal()">&times;</button>
+      </div>
+      <div>
+        <div class="guide-step">
+          <strong>步驟 1. 複製本頁面的本地路徑：</strong>
+          <div class="copy-path-box">
+            <span id="currentFilePath"></span>
+            <button class="copy-btn" onclick="copyFilePath()">複製網址</button>
+          </div>
+        </div>
+        <div class="guide-step">
+          <strong>步驟 2. 開啟 Chrome 設定：</strong>
+          <br>點擊 Chrome 右上角選單「⋮」 ➔ <strong>「設定」</strong> (或在網址列輸入 <code>chrome://settings/onStartup</code>)。
+        </div>
+        <div class="guide-step">
+          <strong>步驟 3. 變更起始畫面：</strong>
+          <br>在左側點擊<strong>「起始畫面」</strong> ➔ 勾選<strong>「開啟特定網頁或一組網頁」</strong>。
+        </div>
+        <div class="guide-step">
+          <strong>步驟 4. 加入本頁面：</strong>
+          <br>點擊<strong>「新增網頁」</strong>，將步驟 1 複製的網址貼上並儲存即可！
+        </div>
+        <div class="guide-step" style="margin-top: 15px; padding: 10px; background: rgba(99,102,241,0.1); border-radius: 8px;">
+          💡 <strong>小提示</strong>：你也可以按下鍵盤 <kbd>Ctrl</kbd> + <kbd>D</kbd> 將此頁加入書籤列最左側，隨時一鍵點擊返回！
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="modal-btn modal-btn-submit" onclick="closeGuideModal()">我知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Preset AI Services
+    const defaultServices = [
+      // 💬 旗艦對話 (Chat)
+      {
+        id: 'gemini',
+        name: 'Google Gemini',
+        category: 'chat',
+        url: 'https://gemini.google.com/',
+        desc: 'Google 旗艦多模態大模型，支援超長 Context、聯網與即時推理。',
+        badge: '熱門',
+        badgeType: 'hot',
+        color: '#1a73e8',
+        icon: `<svg viewBox="0 0 24 24" fill="#388bfd"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>`,
+        tags: ['Google', '多模態', '超長文本']
+      },
+      {
+        id: 'chatgpt',
+        name: 'ChatGPT',
+        category: 'chat',
+        url: 'https://chatgpt.com/',
+        desc: 'OpenAI 研發，支援 GPT-4o、Canvas、語音模式與各類 GPTs。',
+        badge: '熱門',
+        badgeType: 'hot',
+        color: '#10a37f',
+        icon: `<svg viewBox="0 0 24 24" fill="#10a37f"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.259 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7466-7.0729z"/></svg>`,
+        tags: ['OpenAI', 'GPT-4o', '對話']
+      },
+      {
+        id: 'claude',
+        name: 'Claude',
+        category: 'chat',
+        url: 'https://claude.ai/',
+        desc: 'Anthropic 旗艦模型，在程式碼編寫、長文摘要及邏輯推理表現頂尖。',
+        badge: '推薦',
+        badgeType: 'new',
+        color: '#d97706',
+        icon: `<svg viewBox="0 0 24 24" fill="#d97706"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>`,
+        tags: ['Anthropic', 'Sonnet', '程式碼']
+      },
+      {
+        id: 'deepseek',
+        name: 'DeepSeek',
+        category: 'chat',
+        url: 'https://chat.deepseek.com/',
+        desc: '開源頂級推理模型 DeepSeek-R1 / V3，數理邏輯與代碼能力極強。',
+        badge: '熱門',
+        badgeType: 'hot',
+        color: '#0284c7',
+        icon: `<svg viewBox="0 0 24 24" fill="#0284c7"><circle cx="12" cy="12" r="9"/><path d="M12 8v8m-4-4h8" stroke="#fff" stroke-width="2"/></svg>`,
+        tags: ['DeepSeek-R1', '開源', '推理']
+      },
+      {
+        id: 'copilot',
+        name: 'Microsoft Copilot',
+        category: 'chat',
+        url: 'https://copilot.microsoft.com/',
+        desc: '微軟 AI 助手，整合 Bing 搜尋、DALL-E 3 繪圖與 Office 協作。',
+        badge: '',
+        color: '#0078d4',
+        icon: `<svg viewBox="0 0 24 24" fill="#0078d4"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l-10-5v6l10 5 10-5v-6l-10 5zm0 7l-10-5v6l10 5 10-5v-6l-10 5z"/></svg>`,
+        tags: ['Microsoft', 'Bing', '日常助理']
+      },
+      {
+        id: 'grok',
+        name: 'Grok (xAI)',
+        category: 'chat',
+        url: 'https://grok.com/',
+        desc: 'xAI 打造，具備 X 平台即時數據整合能力與幽默思維模式。',
+        badge: '新',
+        badgeType: 'new',
+        color: '#ffffff',
+        icon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+        tags: ['xAI', '即時聯網', 'Elon Musk']
+      },
+      {
+        id: 'poe',
+        name: 'Poe (Quora)',
+        category: 'chat',
+        url: 'https://poe.com/',
+        desc: '聚合平台，可同時體驗 ChatGPT、Claude、Llama 等眾多模型與機器人。',
+        badge: '',
+        color: '#8b5cf6',
+        icon: `<svg viewBox="0 0 24 24" fill="#8b5cf6"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M9 10h6m-6 4h4" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`,
+        tags: ['聚合平台', '多模型切換']
+      },
+      {
+        id: 'kimi',
+        name: 'Kimi (月之暗面)',
+        category: 'chat',
+        url: 'https://kimi.moonshot.cn/',
+        desc: '支援超長文本解析，擅長研報閱讀、論文整理與長文章提煉。',
+        badge: '',
+        color: '#6366f1',
+        icon: `<svg viewBox="0 0 24 24" fill="#6366f1"><circle cx="12" cy="12" r="10"/><path d="M8 12h8" stroke="#fff" stroke-width="2"/></svg>`,
+        tags: ['長文本', '文檔閱讀']
+      },
+
+      // 🔍 搜尋與研究 (Search & Research)
+      {
+        id: 'perplexity',
+        name: 'Perplexity AI',
+        category: 'search',
+        url: 'https://www.perplexity.ai/',
+        desc: '新世代 AI 搜尋引擎，精準引述來源出處，整合深度研究 Pro Search。',
+        badge: '強烈推薦',
+        badgeType: 'hot',
+        color: '#0d9488',
+        icon: `<svg viewBox="0 0 24 24" fill="#0d9488"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="2" x2="12" y2="22" stroke="#fff" stroke-width="1.5"/></svg>`,
+        tags: ['AI 搜尋', '學術引用', '即時資訊']
+      },
+      {
+        id: 'genspark',
+        name: 'Genspark',
+        category: 'search',
+        url: 'https://www.genspark.ai/',
+        desc: 'AI 驅動的自主研究平台，自動生成綜合性 Sparkpage 頁面報告。',
+        badge: '新',
+        badgeType: 'new',
+        color: '#ec4899',
+        icon: `<svg viewBox="0 0 24 24" fill="#ec4899"><polygon points="12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9 12 2"/></svg>`,
+        tags: ['AI 搜尋', '自動報告']
+      },
+      {
+        id: 'felo',
+        name: 'Felo AI',
+        category: 'search',
+        url: 'https://felo.ai/',
+        desc: '跨語言即時 AI 搜尋引擎，支援繁中、日文及全球資訊整合與心智圖生成。',
+        badge: '',
+        color: '#3b82f6',
+        icon: `<svg viewBox="0 0 24 24" fill="#3b82f6"><circle cx="12" cy="12" r="10"/><path d="M12 8v8m-4-4h8" stroke="#fff" stroke-width="2"/></svg>`,
+        tags: ['跨語言', '心智圖', '搜尋']
+      },
+      {
+        id: 'notebooklm',
+        name: 'Google NotebookLM',
+        category: 'search',
+        url: 'https://notebooklm.google.com/',
+        desc: 'Google 個人 AI 研究筆記本，支援上傳 PDF/網頁並一鍵生成 Podcast 語音。',
+        badge: '推薦',
+        badgeType: 'new',
+        color: '#10b981',
+        icon: `<svg viewBox="0 0 24 24" fill="#10b981"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+        tags: ['Google', '筆記研究', 'AI Podcast']
+      },
+
+      // 💻 程式開發 (Code & Dev)
+      {
+        id: 'v0',
+        name: 'v0 by Vercel',
+        category: 'dev',
+        url: 'https://v0.dev/',
+        desc: '自然語言生成現代 React / Tailwind UI 與全端原型，秒級預覽。',
+        badge: '神器',
+        badgeType: 'hot',
+        color: '#000000',
+        icon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 22h20L12 2z"/></svg>`,
+        tags: ['UI 生成', 'React', 'Tailwind']
+      },
+      {
+        id: 'bolt',
+        name: 'Bolt.new',
+        category: 'dev',
+        url: 'https://bolt.new/',
+        desc: '瀏覽器中直接運行全端 Node / Next.js / Vite 專案的 AI 開發環境。',
+        badge: '熱門',
+        badgeType: 'hot',
+        color: '#f97316',
+        icon: `<svg viewBox="0 0 24 24" fill="#f97316"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+        tags: ['全端生成', 'WebContainers']
+      },
+      {
+        id: 'cursor',
+        name: 'Cursor',
+        category: 'dev',
+        url: 'https://cursor.com/',
+        desc: '新一代 AI 優先 IDE 編輯器，多檔案智慧編程與 Agent 自動除錯。',
+        badge: '推薦',
+        badgeType: 'new',
+        color: '#6366f1',
+        icon: `<svg viewBox="0 0 24 24" fill="#6366f1"><rect x="3" y="3" width="18" height="18" rx="4"/><line x1="8" y1="12" x2="16" y2="12" stroke="#fff" stroke-width="2"/></svg>`,
+        tags: ['AI 編輯器', '代碼生成']
+      },
+      {
+        id: 'github-copilot',
+        name: 'GitHub Copilot',
+        category: 'dev',
+        url: 'https://github.com/copilot',
+        desc: '全球最普及的程式碼自動補全與 GitHub 深度整合 AI 助理。',
+        badge: '',
+        color: '#24292e',
+        icon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>`,
+        tags: ['GitHub', '自動補全']
+      },
+
+      // 🎨 繪圖與多媒體 (Media & Creative)
+      {
+        id: 'midjourney',
+        name: 'Midjourney',
+        category: 'media',
+        url: 'https://www.midjourney.com/',
+        desc: '業界最高畫質與藝術感影像生成模型，支援 Web 介面生成與編輯。',
+        badge: '標竿',
+        badgeType: 'hot',
+        color: '#3b82f6',
+        icon: `<svg viewBox="0 0 24 24" fill="#3b82f6"><circle cx="12" cy="12" r="10"/><path d="M8 15s1.5 2 4 2 4-2 4-2" stroke="#fff" stroke-width="2"/></svg>`,
+        tags: ['AI 繪圖', '超擬真', '藝術風格']
+      },
+      {
+        id: 'ideogram',
+        name: 'Ideogram',
+        category: 'media',
+        url: 'https://ideogram.ai/',
+        desc: '文字排版精準度最高的 AI 繪圖工具，適合海報、標誌與字體設計。',
+        badge: '推薦',
+        badgeType: 'new',
+        color: '#a855f7',
+        icon: `<svg viewBox="0 0 24 24" fill="#a855f7"><rect x="3" y="3" width="18" height="18" rx="4"/><text x="7" y="16" fill="#fff" font-weight="bold" font-size="12">I</text></svg>`,
+        tags: ['文字渲染', 'Logo 設計']
+      },
+      {
+        id: 'kling',
+        name: 'Kling AI (可靈)',
+        category: 'media',
+        url: 'https://klingai.com/',
+        desc: '強大的物理世界動態模擬 AI 影片生成模型，畫面流暢度極高。',
+        badge: '熱門',
+        badgeType: 'hot',
+        color: '#f43f5e',
+        icon: `<svg viewBox="0 0 24 24" fill="#f43f5e"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+        tags: ['影片生成', '高畫質', '物理動態']
+      },
+      {
+        id: 'suno',
+        name: 'Suno AI',
+        category: 'media',
+        url: 'https://suno.com/',
+        desc: '輸入歌詞或風格即可創作完整人聲廣播級歌曲與多元配樂。',
+        badge: '必玩',
+        badgeType: 'new',
+        color: '#e11d48',
+        icon: `<svg viewBox="0 0 24 24" fill="#e11d48"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13" stroke="#e11d48" stroke-width="2"/></svg>`,
+        tags: ['AI 音樂', '人聲歌曲']
+      },
+
+      // ⚡ 辦公生產力 (Productivity & Work)
+      {
+        id: 'gamma',
+        name: 'Gamma App',
+        category: 'work',
+        url: 'https://gamma.app/',
+        desc: '輸入主題或大綱，AI 一鍵快速生成設計精美的簡報 (PPT)、網頁與文檔。',
+        badge: '推薦',
+        badgeType: 'hot',
+        color: '#ec4899',
+        icon: `<svg viewBox="0 0 24 24" fill="#ec4899"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21" stroke="#ec4899" stroke-width="2"/></svg>`,
+        tags: ['一鍵 PPT', '簡報設計']
+      },
+      {
+        id: 'notion',
+        name: 'Notion AI',
+        category: 'work',
+        url: 'https://www.notion.so/',
+        desc: '深度整合 Notion 工作區，支援會議記錄提煉、文案擴寫與智慧問答。',
+        badge: '',
+        color: '#000000',
+        icon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4v16h16V4H4zm12 12H8v-2h8v2zm0-4H8v-2h8v2zm0-4H8V6h8v2z"/></svg>`,
+        tags: ['知識庫', '協同辦公']
+      },
+      {
+        id: 'deepl',
+        name: 'DeepL 翻譯',
+        category: 'work',
+        url: 'https://www.deepl.com/translator',
+        desc: '全球最自然精準的神經網絡翻譯工具，支援文檔整篇翻譯與語氣微調。',
+        badge: '精準',
+        badgeType: 'new',
+        color: '#0f2b48',
+        icon: `<svg viewBox="0 0 24 24" fill="#0f2b48"><circle cx="12" cy="12" r="10"/></svg>`,
+        tags: ['翻譯神器', '多語言']
+      }
+    ];
+
+    // State Management
+    let services = [];
+    let pinnedIds = [];
+    let currentCategory = 'all';
+
+    // Init data
+    function initData() {
+      const storedPinned = localStorage.getItem('ai_portal_pinned');
+      pinnedIds = storedPinned ? JSON.parse(storedPinned) : ['gemini', 'chatgpt', 'claude', 'perplexity'];
+
+      const customServices = localStorage.getItem('ai_portal_custom');
+      const customList = customServices ? JSON.parse(customServices) : [];
+
+      services = [...defaultServices, ...customList];
+      renderGrid();
+      updateCounts();
+    }
+
+    // Save Pinned State
+    function togglePin(e, id) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (pinnedIds.includes(id)) {
+        pinnedIds = pinnedIds.filter(item => item !== id);
+      } else {
+        pinnedIds.push(id);
+      }
+      localStorage.setItem('ai_portal_pinned', JSON.stringify(pinnedIds));
+      renderGrid();
+      updateCounts();
+    }
+
+    // Delete Custom Item
+    function deleteCustomItem(e, id) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (confirm('確定要刪除這個自訂工具嗎？')) {
+        let customServices = JSON.parse(localStorage.getItem('ai_portal_custom') || '[]');
+        customServices = customServices.filter(item => item.id !== id);
+        localStorage.setItem('ai_portal_custom', JSON.stringify(customServices));
+        pinnedIds = pinnedIds.filter(item => item !== id);
+        localStorage.setItem('ai_portal_pinned', JSON.stringify(pinnedIds));
+        initData();
+      }
+    }
+
+    // Render Grid
+    function renderGrid() {
+      const grid = document.getElementById('aiGrid');
+      const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+      grid.innerHTML = '';
+
+      let filtered = services.filter(item => {
+        // Filter by category
+        if (currentCategory === 'pinned' && !pinnedIds.includes(item.id)) return false;
+        if (currentCategory !== 'all' && currentCategory !== 'pinned' && item.category !== currentCategory) return false;
+
+        // Filter by search query
+        if (searchQuery) {
+          const matchName = item.name.toLowerCase().includes(searchQuery);
+          const matchDesc = item.desc.toLowerCase().includes(searchQuery);
+          const matchTags = item.tags && item.tags.some(t => t.toLowerCase().includes(searchQuery));
+          if (!matchName && !matchDesc && !matchTags) return false;
+        }
+
+        return true;
+      });
+
+      // Sort pinned first when viewing "all"
+      if (currentCategory === 'all' && !searchQuery) {
+        filtered.sort((a, b) => {
+          const aPinned = pinnedIds.includes(a.id);
+          const bPinned = pinnedIds.includes(b.id);
+          if (aPinned && !bPinned) return -1;
+          if (!aPinned && bPinned) return 1;
+          return 0;
+        });
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; opacity: 0.5;">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 6px;">找不到相符的 AI 工具</div>
+            <div style="font-size: 0.9rem;">試試更換搜尋字詞或點擊「新增工具」加入</div>
+          </div>
+        `;
+      } else {
+        filtered.forEach(item => {
+          const isPinned = pinnedIds.includes(item.id);
+          const isCustom = item.isCustom;
+
+          const card = document.createElement('a');
+          card.className = 'ai-card';
+          card.href = item.url;
+          card.target = '_blank';
+          card.rel = 'noopener noreferrer';
+
+          let badgeHtml = '';
+          if (item.badge) {
+            badgeHtml = `<span class="badge badge-${item.badgeType || 'hot'}">${item.badge}</span>`;
+          }
+
+          let tagsHtml = '';
+          if (item.tags && item.tags.length > 0) {
+            tagsHtml = item.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
+          }
+
+          card.innerHTML = `
+            <div>
+              <div class="card-header">
+                <div class="card-brand">
+                  <div class="card-icon">
+                    ${item.icon || `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>`}
+                  </div>
+                  <div class="card-info">
+                    <h3>${item.name} ${badgeHtml}</h3>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <button class="pin-btn ${isPinned ? 'pinned' : ''}" title="${isPinned ? '取消常用' : '設為常用'}" onclick="togglePin(event, '${item.id}')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="${isPinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                  </button>
+                  ${isCustom ? `
+                    <button class="delete-btn" title="刪除自訂項目" onclick="deleteCustomItem(event, '${item.id}')">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+              <div class="card-desc">${item.desc || '強大的人工智慧輔助工具'}</div>
+            </div>
+            <div class="card-footer">
+              <div class="card-tags">${tagsHtml}</div>
+              <div class="card-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </div>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      }
+
+      // Add "Custom Card" button
+      const addCard = document.createElement('div');
+      addCard.className = 'add-card';
+      addCard.onclick = openAddModal;
+      addCard.innerHTML = `
+        <div class="add-card-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </div>
+        <div style="font-size: 0.95rem; font-weight: 600;">新增自訂 AI 工具</div>
+        <div style="font-size: 0.78rem; opacity: 0.7;">收藏你個人的專屬 AI 網站</div>
+      `;
+      grid.appendChild(addCard);
+    }
+
+    // Update Counts for tabs
+    function updateCounts() {
+      document.getElementById('count-all').innerText = services.length;
+      document.getElementById('count-pinned').innerText = pinnedIds.length;
+      document.getElementById('count-chat').innerText = services.filter(s => s.category === 'chat').length;
+      document.getElementById('count-search').innerText = services.filter(s => s.category === 'search').length;
+      document.getElementById('count-dev').innerText = services.filter(s => s.category === 'dev').length;
+      document.getElementById('count-media').innerText = services.filter(s => s.category === 'media').length;
+      document.getElementById('count-work').innerText = services.filter(s => s.category === 'work').length;
+    }
+
+    // Launch AI with prompt
+    function launchAI(engine) {
+      const query = document.getElementById('searchInput').value.trim();
+      let targetUrl = '';
+
+      switch(engine) {
+        case 'gemini':
+          targetUrl = query ? `https://gemini.google.com/app?prompt=${encodeURIComponent(query)}` : 'https://gemini.google.com/';
+          break;
+        case 'chatgpt':
+          targetUrl = query ? `https://chatgpt.com/?q=${encodeURIComponent(query)}` : 'https://chatgpt.com/';
+          break;
+        case 'claude':
+          targetUrl = 'https://claude.ai/new';
+          if (query) {
+            navigator.clipboard.writeText(query);
+          }
+          break;
+        case 'deepseek':
+          targetUrl = 'https://chat.deepseek.com/';
+          if (query) {
+            navigator.clipboard.writeText(query);
+          }
+          break;
+        case 'perplexity':
+          targetUrl = query ? `https://www.perplexity.ai/search?q=${encodeURIComponent(query)}` : 'https://www.perplexity.ai/';
+          break;
+        case 'google':
+          targetUrl = query ? `https://www.google.com/search?q=${encodeURIComponent(query)}` : 'https://www.google.com/';
+          break;
+      }
+
+      window.open(targetUrl, '_blank');
+    }
+
+    // Real-time Clock
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock').innerText = `${hours}:${minutes}:${seconds}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Search filter input listener
+    document.getElementById('searchInput').addEventListener('input', () => {
+      renderGrid();
+    });
+
+    document.getElementById('searchInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        launchAI('gemini');
+      }
+    });
+
+    // Keyboard shortcut '/' to focus search
+    window.addEventListener('keydown', (e) => {
+      if (e.key === '/' && document.activeElement !== document.getElementById('searchInput')) {
+        e.preventDefault();
+        document.getElementById('searchInput').focus();
+        document.getElementById('searchInput').select();
+      }
+    });
+
+    // Category Tabs click
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCategory = btn.getAttribute('data-category');
+        
+        const titles = {
+          all: '所有 AI 工具',
+          pinned: '⭐ 我的常用收藏',
+          chat: '💬 旗艦對話助手',
+          search: '🔍 搜尋與深度研究',
+          dev: '💻 程式開發與架構',
+          media: '🎨 繪圖與多媒體創作',
+          work: '⚡ 辦公與生產力效率'
+        };
+        document.getElementById('currentCategoryTitle').innerText = titles[currentCategory] || '所有 AI 工具';
+        renderGrid();
+      });
+    });
+
+    // Theme Toggle
+    const themeToggleBtn = document.getElementById('themeToggle');
+    let currentTheme = localStorage.getItem('ai_portal_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+
+    themeToggleBtn.addEventListener('click', () => {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', currentTheme);
+      localStorage.setItem('ai_portal_theme', currentTheme);
+    });
+
+    // Modal controls
+    function openAddModal() {
+      document.getElementById('addModal').classList.add('show');
+      document.getElementById('customName').focus();
+    }
+
+    function closeAddModal() {
+      document.getElementById('addModal').classList.remove('show');
+      document.getElementById('customAiForm').reset();
+    }
+
+    function openGuideModal() {
+      document.getElementById('currentFilePath').innerText = window.location.href;
+      document.getElementById('guideModal').classList.add('show');
+    }
+
+    function closeGuideModal() {
+      document.getElementById('guideModal').classList.remove('show');
+    }
+
+    function copyFilePath() {
+      const path = window.location.href;
+      navigator.clipboard.writeText(path).then(() => {
+        alert('已複製網址到剪貼簿！可直接貼到 Chrome 起始頁面設定中。');
+      });
+    }
+
+    // Add Custom AI Form Submit
+    document.getElementById('customAiForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('customName').value.trim();
+      const url = document.getElementById('customUrl').value.trim();
+      const desc = document.getElementById('customDesc').value.trim();
+      const category = document.getElementById('customCategory').value;
+
+      if (!name || !url) return;
+
+      const newItem = {
+        id: 'custom_' + Date.now(),
+        name: name,
+        url: url,
+        desc: desc || '自訂 AI 站點',
+        category: category,
+        badge: '自訂',
+        badgeType: 'custom',
+        isCustom: true,
+        tags: ['自訂收藏'],
+        icon: `<svg viewBox="0 0 24 24" fill="#a855f7"><circle cx="12" cy="12" r="9"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">${name.charAt(0).toUpperCase()}</text></svg>`
+      };
+
+      let customServices = JSON.parse(localStorage.getItem('ai_portal_custom') || '[]');
+      customServices.push(newItem);
+      localStorage.setItem('ai_portal_custom', JSON.stringify(customServices));
+
+      closeAddModal();
+      initData();
+    });
+
+    // Close modal on click backdrop
+    window.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-backdrop')) {
+        closeAddModal();
+        closeGuideModal();
+      }
+    });
+
+    // Startup
+    initData();
+  </script>
+</body>
+</html>
