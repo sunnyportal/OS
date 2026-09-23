@@ -158,6 +158,7 @@
       border: 1px solid var(--card-border);
       color: var(--text-muted);
       cursor: pointer;
+      user-select: none;
     }
 
     .cloud-status-badge.connected {
@@ -391,12 +392,6 @@
       margin-left: 2px;
     }
 
-    .category-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
     /* Grid Section */
     .section-header {
       font-size: 1.15rem;
@@ -457,11 +452,17 @@
       opacity: 1;
     }
 
+    .card-main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
     .card-header {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .card-brand {
@@ -543,6 +544,8 @@
       align-items: center;
       gap: 2px;
       opacity: 0.8;
+      position: relative;
+      z-index: 2;
     }
 
     .card-action-btn {
@@ -579,7 +582,7 @@
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     .card-footer {
@@ -613,6 +616,28 @@
     .ai-card:hover .card-arrow {
       color: var(--accent);
       transform: translateX(3px);
+    }
+
+    /* Highlight pulse for new bookmark */
+    @keyframes cardPulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+        border-color: #6366f1;
+        transform: scale(1.02);
+      }
+      50% {
+        box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+        border-color: #a855f7;
+        transform: scale(1.02);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+        transform: scale(1);
+      }
+    }
+
+    .card-highlight {
+      animation: cardPulse 1.8s ease-in-out 2;
     }
 
     /* Add Card Placeholder */
@@ -814,6 +839,65 @@
       white-space: pre-wrap;
     }
 
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast-item {
+      pointer-events: auto;
+      background: var(--modal-bg);
+      color: var(--text-main);
+      border: 1px solid var(--modal-border);
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      max-width: 360px;
+    }
+
+    .toast-item.success {
+      border-left: 4px solid #10b981;
+    }
+
+    .toast-item.info {
+      border-left: 4px solid #6366f1;
+    }
+
+    .toast-item.warning {
+      border-left: 4px solid #f59e0b;
+    }
+
+    @keyframes toastSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes toastFadeOut {
+      to {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+      }
+    }
+
     /* Footer */
     footer {
       margin-top: 50px;
@@ -855,12 +939,20 @@
         width: 100%;
         justify-content: space-between;
       }
+      .toast-container {
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="ambient-glow"></div>
   <div class="ambient-glow-2"></div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
 
   <div class="container">
     <!-- Header -->
@@ -1013,7 +1105,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">網站網址 (URL) *</label>
-          <input type="url" id="bmUrl" class="form-input" placeholder="https://..." required onblur="autoFillIcon()">
+          <input type="text" id="bmUrl" class="form-input" placeholder="例如：gemini.google.com 或 https://..." required>
         </div>
         <div class="form-group">
           <label class="form-label">所屬分類 *</label>
@@ -1116,7 +1208,7 @@ create table if not exists bookmarks (
   tags text[] default array[]::text[],
   icon_url text default '',
   is_pinned boolean default false,
-  sort_order int default 0,
+  sort_order bigint default 0,
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
@@ -1157,6 +1249,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         badge: '熱門',
         badge_type: 'hot',
         is_pinned: true,
+        sort_order: 10,
         tags: ['Google', '多模態', '超長文本']
       },
       {
@@ -1168,6 +1261,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         badge: '熱門',
         badge_type: 'hot',
         is_pinned: true,
+        sort_order: 9,
         tags: ['OpenAI', 'GPT-4o', '對話']
       },
       {
@@ -1179,6 +1273,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         badge: '推薦',
         badge_type: 'new',
         is_pinned: true,
+        sort_order: 8,
         tags: ['Anthropic', 'Sonnet', '程式碼']
       },
       {
@@ -1190,6 +1285,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         badge: '熱門',
         badge_type: 'hot',
         is_pinned: true,
+        sort_order: 7,
         tags: ['DeepSeek-R1', '開源', '推理']
       },
       {
@@ -1199,7 +1295,9 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         url: 'https://copilot.microsoft.com/',
         desc_text: '微軟 AI 助手，整合 Bing 搜尋、DALL-E 3 繪圖與 Office 協作。',
         badge: '',
+        badge_type: 'hot',
         is_pinned: false,
+        sort_order: 6,
         tags: ['Microsoft', 'Bing', '日常助理']
       },
       {
@@ -1211,6 +1309,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         badge: '新',
         badge_type: 'new',
         is_pinned: false,
+        sort_order: 5,
         tags: ['xAI', '即時聯網', 'Elon Musk']
       },
       {
@@ -1222,6 +1321,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         badge: '強烈推薦',
         badge_type: 'hot',
         is_pinned: true,
+        sort_order: 4,
         tags: ['AI 搜尋', '學術引用', '即時資訊']
       },
       {
@@ -1233,6 +1333,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         badge: '推薦',
         badge_type: 'new',
         is_pinned: false,
+        sort_order: 3,
         tags: ['Google', '筆記研究', 'AI Podcast']
       },
       {
@@ -1244,6 +1345,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         badge: '神器',
         badge_type: 'hot',
         is_pinned: false,
+        sort_order: 2,
         tags: ['UI 生成', 'React', 'Tailwind']
       },
       {
@@ -1255,6 +1357,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         badge: '熱門',
         badge_type: 'hot',
         is_pinned: false,
+        sort_order: 1,
         tags: ['全端生成', 'WebContainers']
       },
       {
@@ -1266,6 +1369,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         badge: '標竿',
         badge_type: 'hot',
         is_pinned: false,
+        sort_order: 1,
         tags: ['AI 繪圖', '超擬真', '藝術風格']
       },
       {
@@ -1277,6 +1381,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         badge: '推薦',
         badge_type: 'hot',
         is_pinned: false,
+        sort_order: 1,
         tags: ['一鍵 PPT', '簡報設計']
       }
     ];
@@ -1288,6 +1393,44 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
     let supabaseClient = null;
     let isCloudConnected = false;
 
+    // Helper: HTML Escaping
+    function escapeHtml(str) {
+      if (str === undefined || str === null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Helper: Toast Notifications
+    function showToast(message, type = 'info', duration = 3200) {
+      let container = document.getElementById('toastContainer');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+      }
+
+      const toast = document.createElement('div');
+      toast.className = `toast-item ${type}`;
+
+      let icon = 'ℹ️';
+      if (type === 'success') icon = '✅';
+      else if (type === 'warning') icon = '⚠️';
+      else if (type === 'danger') icon = '❌';
+
+      toast.innerHTML = `<span>${icon}</span><span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'toastFadeOut 0.3s forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
     // Database / Storage Initializer
     async function initApp() {
       loadLocalData();
@@ -1297,13 +1440,44 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       updateCategorySelectOptions();
     }
 
-    // Local Storage Loader
+    // Local Storage Loader & Schema Normalizer
     function loadLocalData() {
-      const storedCats = localStorage.getItem('ai_portal_categories_v2');
-      categories = storedCats ? JSON.parse(storedCats) : defaultCategories;
+      const storedCats = localStorage.getItem('ai_portal_categories_v2') || localStorage.getItem('ai_portal_categories');
+      try {
+        categories = storedCats ? JSON.parse(storedCats) : defaultCategories;
+      } catch (e) {
+        categories = defaultCategories;
+      }
 
-      const storedBms = localStorage.getItem('ai_portal_bookmarks_v2');
-      bookmarks = storedBms ? JSON.parse(storedBms) : defaultBookmarks;
+      const storedBms = localStorage.getItem('ai_portal_bookmarks_v2') || localStorage.getItem('ai_portal_bookmarks');
+      try {
+        bookmarks = storedBms ? JSON.parse(storedBms) : defaultBookmarks;
+      } catch (e) {
+        bookmarks = defaultBookmarks;
+      }
+
+      if (!Array.isArray(categories) || categories.length === 0) {
+        categories = defaultCategories;
+      }
+      if (!Array.isArray(bookmarks) || bookmarks.length === 0) {
+        bookmarks = defaultBookmarks;
+      }
+
+      // Backward compatibility normalization
+      const defaultCatId = categories[0]?.id || 'chat';
+      bookmarks = bookmarks.map(b => ({
+        id: b.id || ('bm_' + Math.random().toString(36).substring(2, 9)),
+        name: b.name || '未命名連結',
+        url: b.url || '#',
+        category_id: b.category_id || b.category || defaultCatId,
+        desc_text: b.desc_text || b.desc || '',
+        badge: b.badge || '',
+        badge_type: b.badge_type || (b.badge ? 'custom' : 'hot'),
+        tags: Array.isArray(b.tags) ? b.tags : (typeof b.tags === 'string' ? b.tags.split(',').map(s => s.trim()).filter(Boolean) : []),
+        icon_url: b.icon_url || '',
+        is_pinned: !!b.is_pinned,
+        sort_order: b.sort_order || 0
+      }));
     }
 
     function saveLocalData() {
@@ -1349,19 +1523,17 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       if (!supabaseClient) return;
       try {
         const { data: cloudCats, error: catErr } = await supabaseClient.from('categories').select('*').order('sort_order', { ascending: true });
-        const { data: cloudBms, error: bmErr } = await supabaseClient.from('bookmarks').select('*').order('sort_order', { ascending: true });
+        const { data: cloudBms, error: bmErr } = await supabaseClient.from('bookmarks').select('*').order('sort_order', { ascending: false });
 
         if (!catErr && cloudCats && cloudCats.length > 0) {
           categories = cloudCats;
         } else if (categories.length > 0 && (!cloudCats || cloudCats.length === 0)) {
-          // Push initial categories to cloud
           await supabaseClient.from('categories').upsert(categories);
         }
 
         if (!bmErr && cloudBms && cloudBms.length > 0) {
           bookmarks = cloudBms;
         } else if (bookmarks.length > 0 && (!cloudBms || cloudBms.length === 0)) {
-          // Push initial bookmarks to cloud
           await supabaseClient.from('bookmarks').upsert(bookmarks);
         }
 
@@ -1406,7 +1578,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
 
       // Category Tabs
       categories.forEach(cat => {
-        const count = bookmarks.filter(b => b.category_id === cat.id).length;
+        const count = bookmarks.filter(b => (b.category_id || b.category) === cat.id).length;
         const btn = document.createElement('button');
         btn.className = `tab-btn ${currentCategory === cat.id ? 'active' : ''}`;
         btn.innerHTML = `${cat.icon || '📁'} ${cat.name} <span class="tab-count">${count}</span>`;
@@ -1437,21 +1609,28 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       grid.innerHTML = '';
 
       let filtered = bookmarks.filter(item => {
+        const catId = item.category_id || item.category;
         if (currentCategory === 'pinned' && !item.is_pinned) return false;
-        if (currentCategory !== 'all' && currentCategory !== 'pinned' && item.category_id !== currentCategory) return false;
+        if (currentCategory !== 'all' && currentCategory !== 'pinned' && catId !== currentCategory) return false;
 
         if (searchQuery) {
-          const matchName = item.name.toLowerCase().includes(searchQuery);
+          const matchName = (item.name || '').toLowerCase().includes(searchQuery);
           const matchDesc = (item.desc_text || '').toLowerCase().includes(searchQuery);
           const matchTags = item.tags && item.tags.some(t => t.toLowerCase().includes(searchQuery));
-          if (!matchName && !matchDesc && !matchTags) return false;
+          const matchUrl = (item.url || '').toLowerCase().includes(searchQuery);
+          if (!matchName && !matchDesc && !matchTags && !matchUrl) return false;
         }
         return true;
       });
 
-      // Sort pinned first on 'all'
-      if (currentCategory === 'all' && !searchQuery) {
-        filtered.sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
+      // Sort: pinned items first, then newest
+      if (!searchQuery) {
+        filtered.sort((a, b) => {
+          if (a.is_pinned !== b.is_pinned) {
+            return a.is_pinned ? -1 : 1;
+          }
+          return (b.sort_order || 0) - (a.sort_order || 0);
+        });
       }
 
       if (filtered.length === 0) {
@@ -1462,55 +1641,56 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 6px;">找不到相符的網站或工具</div>
-            <div style="font-size: 0.88rem;">點擊「新增連結」或更換分類試試</div>
+            <div style="font-size: 0.88rem;">點擊「新增自訂網站連結」或切換分類試試</div>
           </div>
         `;
       } else {
         filtered.forEach(item => {
-          const cat = categories.find(c => c.id === item.category_id);
+          const cat = categories.find(c => c.id === (item.category_id || item.category));
           const card = document.createElement('div');
           card.className = 'ai-card';
+          card.setAttribute('data-id', item.id);
           if (cat && cat.color) {
             card.style.setProperty('--card-theme-color', cat.color);
           }
 
           let badgeHtml = '';
           if (item.badge) {
-            badgeHtml = `<span class="badge badge-${item.badge_type || 'hot'}">${item.badge}</span>`;
+            badgeHtml = `<span class="badge badge-${escapeHtml(item.badge_type || 'hot')}">${escapeHtml(item.badge)}</span>`;
           }
 
           let tagsHtml = '';
           if (item.tags && item.tags.length > 0) {
-            tagsHtml = item.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
+            tagsHtml = item.tags.map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('');
           }
 
           // Icon handling
-          let iconHtml = `<img src="https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(item.url)}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'24\\' height=\\'24\\' viewBox=\\'0 0 24 24\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'10\\' fill=\\'%236366f1\\'/></svg>'">`;
+          let iconHtml = `<img src="https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(item.url)}" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'24\\' height=\\'24\\' viewBox=\\'0 0 24 24\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'10\\' fill=\\'%236366f1\\'/></svg>'">`;
           if (item.icon_url && item.icon_url.startsWith('<svg')) {
             iconHtml = item.icon_url;
           }
 
           card.innerHTML = `
-            <div onclick="window.open('${item.url}', '_blank')">
+            <div class="card-main-content">
               <div class="card-header">
                 <div class="card-brand">
                   <div class="card-icon">${iconHtml}</div>
                   <div class="card-info">
-                    <h3>${item.name} ${badgeHtml}</h3>
+                    <h3>${escapeHtml(item.name)} ${badgeHtml}</h3>
                   </div>
                 </div>
-                <div class="card-actions" onclick="event.stopPropagation()">
-                  <button class="card-action-btn ${item.is_pinned ? 'pinned' : ''}" title="${item.is_pinned ? '取消常用' : '設為常用'}" onclick="togglePin('${item.id}')">
+                <div class="card-actions">
+                  <button class="card-action-btn ${item.is_pinned ? 'pinned' : ''}" title="${item.is_pinned ? '取消常用' : '設為常用'}" onclick="event.stopPropagation(); togglePin('${escapeHtml(item.id)}')">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="${item.is_pinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                     </svg>
                   </button>
-                  <button class="card-action-btn" title="編輯連結" onclick="openEditBookmarkModal('${item.id}')">
+                  <button class="card-action-btn" title="編輯連結" onclick="event.stopPropagation(); openEditBookmarkModal('${escapeHtml(item.id)}')">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
                     </svg>
                   </button>
-                  <button class="card-action-btn delete" title="刪除連結" onclick="deleteBookmark('${item.id}')">
+                  <button class="card-action-btn delete" title="刪除連結" onclick="event.stopPropagation(); deleteBookmark('${escapeHtml(item.id)}')">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <line x1="18" y1="6" x2="6" y2="18"></line>
                       <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -1518,9 +1698,9 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
                   </button>
                 </div>
               </div>
-              <div class="card-desc">${item.desc_text || '點擊即可前往開啟網站'}</div>
+              <div class="card-desc">${escapeHtml(item.desc_text) || '點擊即可前往開啟網站'}</div>
             </div>
-            <div class="card-footer" onclick="window.open('${item.url}', '_blank')">
+            <div class="card-footer">
               <div class="card-tags">${tagsHtml}</div>
               <div class="card-arrow">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1530,6 +1710,12 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
               </div>
             </div>
           `;
+
+          card.onclick = (e) => {
+            if (e.target.closest('.card-actions')) return;
+            window.open(item.url, '_blank');
+          };
+
           grid.appendChild(card);
         });
       }
@@ -1559,14 +1745,19 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         saveLocalData();
         renderCategoryTabs();
         renderGrid();
+        showToast(bm.is_pinned ? `已將「${bm.name}」設為常用 ⭐` : `已取消「${bm.name}」常用`, 'info');
 
         if (supabaseClient) {
-          await supabaseClient.from('bookmarks').update({ is_pinned: bm.is_pinned }).eq('id', id);
+          try {
+            await supabaseClient.from('bookmarks').update({ is_pinned: bm.is_pinned }).eq('id', id);
+          } catch (e) {
+            console.error('Cloud pin error:', e);
+          }
         }
       }
     }
 
-    // Bookmark Add & Edit Management
+    // Category Select Options Helper
     function updateCategorySelectOptions() {
       const select = document.getElementById('bmCategory');
       select.innerHTML = '';
@@ -1582,12 +1773,17 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       document.getElementById('bookmarkModalTitle').innerText = '新增網站連結';
       document.getElementById('bookmarkForm').reset();
       document.getElementById('bookmarkId').value = '';
-      if (currentCategory !== 'all' && currentCategory !== 'pinned') {
-        document.getElementById('bmCategory').value = currentCategory;
-      }
+      
       updateCategorySelectOptions();
+      
+      if (currentCategory !== 'all' && currentCategory !== 'pinned' && categories.some(c => c.id === currentCategory)) {
+        document.getElementById('bmCategory').value = currentCategory;
+      } else if (categories.length > 0) {
+        document.getElementById('bmCategory').value = categories[0].id;
+      }
+      
       document.getElementById('bookmarkModal').classList.add('show');
-      document.getElementById('bmName').focus();
+      setTimeout(() => document.getElementById('bmName').focus(), 60);
     }
 
     function openEditBookmarkModal(id) {
@@ -1603,28 +1799,40 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       document.getElementById('bmBadge').value = bm.badge || '';
       
       updateCategorySelectOptions();
-      document.getElementById('bmCategory').value = bm.category_id || categories[0]?.id;
+      document.getElementById('bmCategory').value = bm.category_id || bm.category || categories[0]?.id;
 
       document.getElementById('bookmarkModal').classList.add('show');
+      setTimeout(() => document.getElementById('bmName').focus(), 60);
     }
 
     function closeBookmarkModal() {
       document.getElementById('bookmarkModal').classList.remove('show');
     }
 
-    function autoFillIcon() {
-      // Optional favicon helper
-    }
-
+    // Bookmark Form Submit Handler
     document.getElementById('bookmarkForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = document.getElementById('bookmarkId').value || ('bm_' + Date.now());
       const name = document.getElementById('bmName').value.trim();
-      const url = document.getElementById('bmUrl').value.trim();
-      const category_id = document.getElementById('bmCategory').value;
+      let url = document.getElementById('bmUrl').value.trim();
+      const category_id = document.getElementById('bmCategory').value || categories[0]?.id || 'chat';
       const desc_text = document.getElementById('bmDesc').value.trim();
       const tagsStr = document.getElementById('bmTags').value.trim();
       const badge = document.getElementById('bmBadge').value.trim();
+
+      if (!name) {
+        showToast('請輸入網站名稱！', 'warning');
+        return;
+      }
+      if (!url) {
+        showToast('請輸入網站網址！', 'warning');
+        return;
+      }
+
+      // Automatically add https:// if scheme is missing
+      if (!/^https?:\/\//i.test(url)) {
+        url = 'https://' + url;
+      }
 
       const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
 
@@ -1639,36 +1847,67 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         desc_text,
         tags,
         badge,
-        badge_type: badge ? 'custom' : '',
+        badge_type: badge ? 'custom' : 'hot',
         is_pinned,
         sort_order: Date.now()
       };
 
       if (existingIndex >= 0) {
         bookmarks[existingIndex] = { ...bookmarks[existingIndex], ...newBm };
+        showToast(`已更新連結「${name}」！`, 'success');
       } else {
-        bookmarks.push(newBm);
+        bookmarks.unshift(newBm);
+        showToast(`🎉 已成功新增「${name}」！`, 'success');
       }
 
       saveLocalData();
-      renderCategoryTabs();
-      renderGrid();
+
+      // Ensure user sees the newly added link
+      if (currentCategory !== 'all' && currentCategory !== 'pinned' && currentCategory !== category_id) {
+        selectCategory(category_id);
+      } else {
+        renderCategoryTabs();
+        renderGrid();
+      }
+
       closeBookmarkModal();
 
+      // Highlight new/updated card & scroll into view smoothly
+      setTimeout(() => {
+        const cardElem = document.querySelector(`[data-id="${id}"]`);
+        if (cardElem) {
+          cardElem.classList.add('card-highlight');
+          cardElem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          setTimeout(() => cardElem.classList.remove('card-highlight'), 3600);
+        }
+      }, 120);
+
       if (supabaseClient) {
-        await supabaseClient.from('bookmarks').upsert(newBm);
+        try {
+          await supabaseClient.from('bookmarks').upsert(newBm);
+        } catch (err) {
+          console.error('Cloud upsert error:', err);
+        }
       }
     });
 
     async function deleteBookmark(id) {
-      if (!confirm('確定要刪除這個網站連結嗎？')) return;
+      const bm = bookmarks.find(b => b.id === id);
+      const name = bm ? bm.name : '網站';
+      if (!confirm(`確定要刪除「${name}」這個網站連結嗎？`)) return;
+
       bookmarks = bookmarks.filter(b => b.id !== id);
       saveLocalData();
       renderCategoryTabs();
       renderGrid();
+      showToast(`已刪除「${name}」連結`, 'info');
 
       if (supabaseClient) {
-        await supabaseClient.from('bookmarks').delete().eq('id', id);
+        try {
+          await supabaseClient.from('bookmarks').delete().eq('id', id);
+        } catch (err) {
+          console.error('Cloud delete error:', err);
+        }
       }
     }
 
@@ -1692,17 +1931,17 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       categories.forEach(cat => {
         const item = document.createElement('div');
         item.className = 'category-manager-item';
-        const count = bookmarks.filter(b => b.category_id === cat.id).length;
+        const count = bookmarks.filter(b => (b.category_id || b.category) === cat.id).length;
 
         item.innerHTML = `
           <div class="cat-item-left">
             <span>${cat.icon || '📁'}</span>
-            <span>${cat.name}</span>
+            <span>${escapeHtml(cat.name)}</span>
             <span style="font-size: 0.75rem; color: var(--text-dim);">(${count} 個連結)</span>
           </div>
           <div class="cat-item-actions">
-            <button class="action-btn" style="height: 30px; padding: 0 8px; font-size: 0.78rem;" onclick="editCategoryName('${cat.id}')">編輯</button>
-            <button class="action-btn" style="height: 30px; padding: 0 8px; font-size: 0.78rem; color: #ef4444;" onclick="deleteCategory('${cat.id}')">刪除</button>
+            <button class="action-btn" style="height: 30px; padding: 0 8px; font-size: 0.78rem;" onclick="editCategoryName('${escapeHtml(cat.id)}')">編輯</button>
+            <button class="action-btn" style="height: 30px; padding: 0 8px; font-size: 0.78rem; color: #ef4444;" onclick="deleteCategory('${escapeHtml(cat.id)}')">刪除</button>
           </div>
         `;
         list.appendChild(item);
@@ -1712,7 +1951,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
     async function addNewCategory() {
       const name = document.getElementById('newCatName').value.trim();
       const icon = document.getElementById('newCatIcon').value.trim() || '📁';
-      if (!name) return alert('請輸入分類名稱！');
+      if (!name) return showToast('請輸入分類名稱！', 'warning');
 
       const id = 'cat_' + Date.now();
       const newCat = {
@@ -1726,10 +1965,17 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       categories.push(newCat);
       saveLocalData();
       renderCategoryManagerList();
+      updateCategorySelectOptions();
+      renderCategoryTabs();
       document.getElementById('newCatName').value = '';
+      showToast(`已新增分類「${name}」！`, 'success');
 
       if (supabaseClient) {
-        await supabaseClient.from('categories').upsert(newCat);
+        try {
+          await supabaseClient.from('categories').upsert(newCat);
+        } catch (e) {
+          console.error(e);
+        }
       }
     }
 
@@ -1744,15 +1990,22 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
 
         saveLocalData();
         renderCategoryManagerList();
+        renderCategoryTabs();
+        updateCategorySelectOptions();
+        showToast('分類已更新！', 'success');
 
         if (supabaseClient) {
-          await supabaseClient.from('categories').update({ name: cat.name, icon: cat.icon }).eq('id', catId);
+          try {
+            await supabaseClient.from('categories').update({ name: cat.name, icon: cat.icon }).eq('id', catId);
+          } catch (e) {
+            console.error(e);
+          }
         }
       }
     }
 
     async function deleteCategory(catId) {
-      if (categories.length <= 1) return alert('至少需保留一個分類！');
+      if (categories.length <= 1) return showToast('至少需保留一個分類！', 'warning');
       const cat = categories.find(c => c.id === catId);
       if (!confirm(`確定要刪除「${cat.name}」分類嗎？此分類下的連結將會被移至第一個分類。`)) return;
 
@@ -1761,17 +2014,25 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
 
       // Reassign bookmarks
       bookmarks.forEach(bm => {
-        if (bm.category_id === catId) {
+        if ((bm.category_id || bm.category) === catId) {
           bm.category_id = fallbackCatId;
         }
       });
 
       saveLocalData();
       renderCategoryManagerList();
+      renderCategoryTabs();
+      renderGrid();
+      updateCategorySelectOptions();
+      showToast(`已刪除「${cat.name}」分類`, 'info');
 
       if (supabaseClient) {
-        await supabaseClient.from('categories').delete().eq('id', catId);
-        await supabaseClient.from('bookmarks').update({ category_id: fallbackCatId }).eq('category_id', catId);
+        try {
+          await supabaseClient.from('categories').delete().eq('id', catId);
+          await supabaseClient.from('bookmarks').update({ category_id: fallbackCatId }).eq('category_id', catId);
+        } catch (e) {
+          console.error(e);
+        }
       }
     }
 
@@ -1791,7 +2052,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       const key = document.getElementById('supabaseKeyInput').value.trim();
 
       if (!url || !key) {
-        return alert('請填寫 Supabase URL 與 Anon Key！');
+        return showToast('請填寫 Supabase URL 與 Anon Key！', 'warning');
       }
 
       localStorage.setItem('ai_portal_sb_url', url);
@@ -1799,7 +2060,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
 
       initSupabase();
       closeCloudModal();
-      alert('已儲存雲端設定並開始同步！');
+      showToast('已儲存雲端設定並開始即時同步！', 'success');
     }
 
     function disconnectCloud() {
@@ -1810,13 +2071,14 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         isCloudConnected = false;
         updateCloudStatusUI(false);
         closeCloudModal();
+        showToast('已切換為本地離線模式', 'info');
       }
     }
 
     function copySupabaseSQL() {
       const sql = document.getElementById('supabaseSqlCode').innerText;
       navigator.clipboard.writeText(sql).then(() => {
-        alert('已複製 SQL 指令！請至 Supabase Dashboard ➔ SQL Editor 執行以建立資料表。');
+        showToast('已複製 SQL 指令！請至 Supabase Dashboard 執行', 'success');
       });
     }
 
@@ -1849,6 +2111,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       a.download = `ai_portal_backup_${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
+      showToast('已匯出 JSON 備份檔！', 'success');
     }
 
     function importDataJSON(event) {
@@ -1860,7 +2123,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         try {
           const json = JSON.parse(e.target.result);
           if (json.categories && json.bookmarks) {
-            if (confirm('確定要還原此 JSON 備份檔嗎？這將會合併並覆蓋現有資料。')) {
+            if (confirm('確定要還原此 JSON 備份檔嗎？這將會合併並更新現有資料。')) {
               categories = json.categories;
               bookmarks = json.bookmarks;
               saveLocalData();
@@ -1872,13 +2135,13 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
                 await supabaseClient.from('categories').upsert(categories);
                 await supabaseClient.from('bookmarks').upsert(bookmarks);
               }
-              alert('JSON 備份資料還原成功！');
+              showToast('JSON 備份資料還原成功！', 'success');
             }
           } else {
-            alert('JSON 格式不正確！');
+            showToast('JSON 格式不正確！', 'warning');
           }
         } catch (err) {
-          alert('解析 JSON 檔案失敗：' + err.message);
+          showToast('解析 JSON 檔案失敗：' + err.message, 'danger');
         }
       };
       reader.readAsText(file);
@@ -1890,7 +2153,10 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       const hours = String(now.getHours()).padStart(2, '0');
       const minutes = String(now.getMinutes()).padStart(2, '0');
       const seconds = String(now.getSeconds()).padStart(2, '0');
-      document.getElementById('clock').innerText = `${hours}:${minutes}:${seconds}`;
+      const clockElem = document.getElementById('clock');
+      if (clockElem) {
+        clockElem.innerText = `${hours}:${minutes}:${seconds}`;
+      }
     }
     setInterval(updateClock, 1000);
     updateClock();
