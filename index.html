@@ -334,26 +334,17 @@
 
     /* Category Navigation Bar */
     .category-nav-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
       margin-bottom: 22px;
-      flex-wrap: wrap;
+      width: 100%;
     }
 
     .filter-tabs {
       display: flex;
+      flex-wrap: wrap; /* Multi-line wrap so no tab is ever cut off! */
       align-items: center;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      scrollbar-width: none;
-      flex: 1;
-    }
-
-    .filter-tabs::-webkit-scrollbar {
-      display: none;
+      gap: 10px 8px;
+      width: 100%;
+      padding: 2px 0;
     }
 
     .tab-btn {
@@ -366,10 +357,11 @@
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 6px;
       font-family: inherit;
+      flex-shrink: 0;
     }
 
     .tab-btn:hover {
@@ -797,8 +789,9 @@
       flex-direction: column;
       gap: 10px;
       margin-bottom: 18px;
-      max-height: 280px;
+      max-height: 320px;
       overflow-y: auto;
+      padding-right: 4px;
     }
 
     .category-manager-item {
@@ -808,8 +801,22 @@
       padding: 10px 14px;
       background: var(--tag-bg);
       border: 1px solid var(--card-border);
-      border-radius: 10px;
+      border-radius: 12px;
       gap: 10px;
+      user-select: none;
+      transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+    }
+
+    .category-manager-item.dragging {
+      opacity: 0.35;
+      background: rgba(99, 102, 241, 0.15);
+      border-style: dashed;
+      border-color: var(--accent);
+    }
+
+    .category-manager-item.drag-over {
+      border-top: 2px solid var(--accent);
+      transform: translateY(-2px);
     }
 
     .cat-item-left {
@@ -817,11 +824,28 @@
       align-items: center;
       gap: 10px;
       font-weight: 600;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .cat-drag-handle {
+      color: var(--text-dim);
+      cursor: grab;
+      padding: 2px 6px;
+      font-size: 1.1rem;
+      border-radius: 4px;
+    }
+
+    .cat-drag-handle:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
     }
 
     .cat-item-actions {
       display: flex;
+      align-items: center;
       gap: 6px;
+      flex-shrink: 0;
     }
 
     /* Code SQL Box */
@@ -1065,7 +1089,7 @@
     <!-- Category Tabs Navigation -->
     <div class="category-nav-bar">
       <div class="filter-tabs" id="categoryTabs">
-        <!-- Dynamically Generated -->
+        <!-- Dynamically Generated with full flex-wrap -->
       </div>
     </div>
 
@@ -1141,7 +1165,7 @@
         <button class="close-modal" onclick="closeCategoryModal()">&times;</button>
       </div>
       <div>
-        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">你可以新增、修改或刪除導航分類：</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">你可以新增分類、拖曳 ⠿ 或點擊 ⬆️ ⬇️ 快速調整分類排列順序：</div>
         
         <div class="category-manager-list" id="categoryManagerList">
           <!-- Dynamically populated -->
@@ -1404,6 +1428,22 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         .replace(/'/g, '&#039;');
     }
 
+    // Helper: Category Matching (robust against ID vs Name difference)
+    function isBookmarkInCategory(bm, catId) {
+      if (!bm) return false;
+      const bCat = bm.category_id || bm.category;
+      if (!bCat) return false;
+      if (bCat === catId) return true;
+
+      const catObj = categories.find(c => c.id === catId);
+      if (catObj) {
+        if (bCat === catObj.name || (typeof bCat === 'string' && bCat.toLowerCase() === catObj.name.toLowerCase())) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     // Helper: Toast Notifications
     function showToast(message, type = 'info', duration = 3200) {
       let container = document.getElementById('toastContainer');
@@ -1440,18 +1480,25 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       updateCategorySelectOptions();
     }
 
-    // Local Storage Loader & Schema Normalizer
+    // Local Storage Loader & Schema Normalizer (Scans all potential keys)
     function loadLocalData() {
-      const storedCats = localStorage.getItem('ai_portal_categories_v2') || localStorage.getItem('ai_portal_categories');
+      // 1. Load categories
+      const rawCats = localStorage.getItem('ai_portal_categories_v2') || 
+                      localStorage.getItem('ai_portal_categories') || 
+                      localStorage.getItem('categories');
       try {
-        categories = storedCats ? JSON.parse(storedCats) : defaultCategories;
+        categories = rawCats ? JSON.parse(rawCats) : defaultCategories;
       } catch (e) {
         categories = defaultCategories;
       }
 
-      const storedBms = localStorage.getItem('ai_portal_bookmarks_v2') || localStorage.getItem('ai_portal_bookmarks');
+      // 2. Load bookmarks
+      const rawBms = localStorage.getItem('ai_portal_bookmarks_v2') || 
+                     localStorage.getItem('ai_portal_bookmarks') || 
+                     localStorage.getItem('ai_bookmarks') || 
+                     localStorage.getItem('bookmarks');
       try {
-        bookmarks = storedBms ? JSON.parse(storedBms) : defaultBookmarks;
+        bookmarks = rawBms ? JSON.parse(rawBms) : defaultBookmarks;
       } catch (e) {
         bookmarks = defaultBookmarks;
       }
@@ -1463,21 +1510,45 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         bookmarks = defaultBookmarks;
       }
 
-      // Backward compatibility normalization
+      // Ensure each category has sort_order and sort them
+      categories.forEach((c, idx) => {
+        if (c.sort_order === undefined || c.sort_order === null) {
+          c.sort_order = idx + 1;
+        }
+      });
+      categories.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+      // Backward compatibility normalization & auto-relinking for bookmarks
       const defaultCatId = categories[0]?.id || 'chat';
-      bookmarks = bookmarks.map(b => ({
-        id: b.id || ('bm_' + Math.random().toString(36).substring(2, 9)),
-        name: b.name || '未命名連結',
-        url: b.url || '#',
-        category_id: b.category_id || b.category || defaultCatId,
-        desc_text: b.desc_text || b.desc || '',
-        badge: b.badge || '',
-        badge_type: b.badge_type || (b.badge ? 'custom' : 'hot'),
-        tags: Array.isArray(b.tags) ? b.tags : (typeof b.tags === 'string' ? b.tags.split(',').map(s => s.trim()).filter(Boolean) : []),
-        icon_url: b.icon_url || '',
-        is_pinned: !!b.is_pinned,
-        sort_order: b.sort_order || 0
-      }));
+      bookmarks = bookmarks.map(b => {
+        let catId = b.category_id || b.category;
+        // If catId was saved as a category name, link to category ID
+        if (catId) {
+          const foundByName = categories.find(c => c.name === catId || (typeof catId === 'string' && c.name.toLowerCase() === catId.toLowerCase()));
+          if (foundByName) {
+            catId = foundByName.id;
+          }
+        }
+        if (!catId) {
+          catId = defaultCatId;
+        }
+
+        return {
+          id: b.id || ('bm_' + Math.random().toString(36).substring(2, 9)),
+          name: b.name || '未命名連結',
+          url: b.url || '#',
+          category_id: catId,
+          desc_text: b.desc_text || b.desc || '',
+          badge: b.badge || '',
+          badge_type: b.badge_type || (b.badge ? 'custom' : 'hot'),
+          tags: Array.isArray(b.tags) ? b.tags : (typeof b.tags === 'string' ? b.tags.split(',').map(s => s.trim()).filter(Boolean) : []),
+          icon_url: b.icon_url || '',
+          is_pinned: !!b.is_pinned,
+          sort_order: b.sort_order || 0
+        };
+      });
+
+      saveLocalData();
     }
 
     function saveLocalData() {
@@ -1518,7 +1589,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       }
     }
 
-    // Sync From Cloud to Local
+    // Sync From Cloud to Local (Never overwrite newly created local items)
     async function syncFromCloud() {
       if (!supabaseClient) return;
       try {
@@ -1526,13 +1597,24 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         const { data: cloudBms, error: bmErr } = await supabaseClient.from('bookmarks').select('*').order('sort_order', { ascending: false });
 
         if (!catErr && cloudCats && cloudCats.length > 0) {
-          categories = cloudCats;
+          const cloudCatIds = new Set(cloudCats.map(c => c.id));
+          const localOnlyCats = categories.filter(c => !cloudCatIds.has(c.id));
+          if (localOnlyCats.length > 0) {
+            await supabaseClient.from('categories').upsert(localOnlyCats);
+          }
+          categories = [...cloudCats, ...localOnlyCats];
+          categories.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
         } else if (categories.length > 0 && (!cloudCats || cloudCats.length === 0)) {
           await supabaseClient.from('categories').upsert(categories);
         }
 
         if (!bmErr && cloudBms && cloudBms.length > 0) {
-          bookmarks = cloudBms;
+          const cloudBmIds = new Set(cloudBms.map(b => b.id));
+          const localOnlyBms = bookmarks.filter(b => !cloudBmIds.has(b.id));
+          if (localOnlyBms.length > 0) {
+            await supabaseClient.from('bookmarks').upsert(localOnlyBms);
+          }
+          bookmarks = [...cloudBms, ...localOnlyBms];
         } else if (bookmarks.length > 0 && (!cloudBms || cloudBms.length === 0)) {
           await supabaseClient.from('bookmarks').upsert(bookmarks);
         }
@@ -1576,12 +1658,12 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       pinnedBtn.onclick = () => selectCategory('pinned');
       tabsContainer.appendChild(pinnedBtn);
 
-      // Category Tabs
+      // Category Tabs (multi-line flex wrapped)
       categories.forEach(cat => {
-        const count = bookmarks.filter(b => (b.category_id || b.category) === cat.id).length;
+        const count = bookmarks.filter(b => isBookmarkInCategory(b, cat.id)).length;
         const btn = document.createElement('button');
         btn.className = `tab-btn ${currentCategory === cat.id ? 'active' : ''}`;
-        btn.innerHTML = `${cat.icon || '📁'} ${cat.name} <span class="tab-count">${count}</span>`;
+        btn.innerHTML = `${cat.icon || '📁'} ${escapeHtml(cat.name)} <span class="tab-count">${count}</span>`;
         btn.onclick = () => selectCategory(cat.id);
         tabsContainer.appendChild(btn);
       });
@@ -1609,9 +1691,8 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       grid.innerHTML = '';
 
       let filtered = bookmarks.filter(item => {
-        const catId = item.category_id || item.category;
         if (currentCategory === 'pinned' && !item.is_pinned) return false;
-        if (currentCategory !== 'all' && currentCategory !== 'pinned' && catId !== currentCategory) return false;
+        if (currentCategory !== 'all' && currentCategory !== 'pinned' && !isBookmarkInCategory(item, currentCategory)) return false;
 
         if (searchQuery) {
           const matchName = (item.name || '').toLowerCase().includes(searchQuery);
@@ -1646,7 +1727,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
         `;
       } else {
         filtered.forEach(item => {
-          const cat = categories.find(c => c.id === (item.category_id || item.category));
+          const cat = categories.find(c => isBookmarkInCategory(item, c.id));
           const card = document.createElement('div');
           card.className = 'ai-card';
           card.setAttribute('data-id', item.id);
@@ -1799,7 +1880,9 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       document.getElementById('bmBadge').value = bm.badge || '';
       
       updateCategorySelectOptions();
-      document.getElementById('bmCategory').value = bm.category_id || bm.category || categories[0]?.id;
+      const currentCatId = bm.category_id || bm.category;
+      const foundCat = categories.find(c => c.id === currentCatId || c.name === currentCatId);
+      document.getElementById('bmCategory').value = foundCat ? foundCat.id : categories[0]?.id;
 
       document.getElementById('bookmarkModal').classList.add('show');
       setTimeout(() => document.getElementById('bmName').focus(), 60);
@@ -1928,24 +2011,102 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       const list = document.getElementById('categoryManagerList');
       list.innerHTML = '';
 
-      categories.forEach(cat => {
+      categories.forEach((cat, idx) => {
         const item = document.createElement('div');
         item.className = 'category-manager-item';
-        const count = bookmarks.filter(b => (b.category_id || b.category) === cat.id).length;
+        item.setAttribute('draggable', 'true');
+        item.setAttribute('data-index', idx);
+        const count = bookmarks.filter(b => isBookmarkInCategory(b, cat.id)).length;
 
         item.innerHTML = `
           <div class="cat-item-left">
-            <span>${cat.icon || '📁'}</span>
-            <span>${escapeHtml(cat.name)}</span>
-            <span style="font-size: 0.75rem; color: var(--text-dim);">(${count} 個連結)</span>
+            <span class="cat-drag-handle" title="按住拖曳調整順序">⠿</span>
+            <span style="font-size: 1.15rem;">${cat.icon || '📁'}</span>
+            <span style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(cat.name)}</span>
+            <span style="font-size: 0.75rem; color: var(--text-dim); flex-shrink: 0;">(${count} 個連結)</span>
           </div>
           <div class="cat-item-actions">
-            <button class="action-btn" style="height: 30px; padding: 0 8px; font-size: 0.78rem;" onclick="editCategoryName('${escapeHtml(cat.id)}')">編輯</button>
-            <button class="action-btn" style="height: 30px; padding: 0 8px; font-size: 0.78rem; color: #ef4444;" onclick="deleteCategory('${escapeHtml(cat.id)}')">刪除</button>
+            <button class="action-btn" style="height: 30px; width: 32px; padding: 0;" title="往前排" ${idx === 0 ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : `onclick="moveCategoryUp(${idx})"`}>
+              ⬆️
+            </button>
+            <button class="action-btn" style="height: 30px; width: 32px; padding: 0;" title="往後排" ${idx === categories.length - 1 ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : `onclick="moveCategoryDown(${idx})"`}>
+              ⬇️
+            </button>
+            <button class="action-btn" style="height: 30px; padding: 0 10px; font-size: 0.8rem;" onclick="editCategoryName('${escapeHtml(cat.id)}')">編輯</button>
+            <button class="action-btn" style="height: 30px; padding: 0 10px; font-size: 0.8rem; color: #ef4444;" onclick="deleteCategory('${escapeHtml(cat.id)}')">刪除</button>
           </div>
         `;
+
+        // HTML5 Drag and drop reordering
+        item.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', idx);
+          item.classList.add('dragging');
+        });
+        item.addEventListener('dragend', () => {
+          item.classList.remove('dragging');
+          list.querySelectorAll('.category-manager-item').forEach(el => el.classList.remove('drag-over'));
+        });
+        item.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          item.classList.add('drag-over');
+        });
+        item.addEventListener('dragleave', () => {
+          item.classList.remove('drag-over');
+        });
+        item.addEventListener('drop', (e) => {
+          e.preventDefault();
+          item.classList.remove('drag-over');
+          const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+          const toIndex = idx;
+          if (!isNaN(fromIndex) && fromIndex !== toIndex) {
+            const moved = categories.splice(fromIndex, 1)[0];
+            categories.splice(toIndex, 0, moved);
+            categories.forEach((c, i) => { c.sort_order = i + 1; });
+            saveLocalData();
+            renderCategoryManagerList();
+            renderCategoryTabs();
+            updateCategorySelectOptions();
+            showToast(`已將「${moved.name}」移至第 ${toIndex + 1} 位！`, 'success', 1500);
+            if (supabaseClient) {
+              supabaseClient.from('categories').upsert(categories).catch(console.error);
+            }
+          }
+        });
+
         list.appendChild(item);
       });
+    }
+
+    function moveCategoryUp(index) {
+      if (index <= 0) return;
+      const moved = categories.splice(index, 1)[0];
+      categories.splice(index - 1, 0, moved);
+      categories.forEach((c, i) => { c.sort_order = i + 1; });
+      saveLocalData();
+      renderCategoryManagerList();
+      renderCategoryTabs();
+      updateCategorySelectOptions();
+      showToast(`已將「${moved.name}」往前調整順序`, 'info', 1500);
+
+      if (supabaseClient) {
+        supabaseClient.from('categories').upsert(categories).catch(console.error);
+      }
+    }
+
+    function moveCategoryDown(index) {
+      if (index >= categories.length - 1) return;
+      const moved = categories.splice(index, 1)[0];
+      categories.splice(index + 1, 0, moved);
+      categories.forEach((c, i) => { c.sort_order = i + 1; });
+      saveLocalData();
+      renderCategoryManagerList();
+      renderCategoryTabs();
+      updateCategorySelectOptions();
+      showToast(`已將「${moved.name}」往後調整順序`, 'info', 1500);
+
+      if (supabaseClient) {
+        supabaseClient.from('categories').upsert(categories).catch(console.error);
+      }
     }
 
     async function addNewCategory() {
@@ -1984,19 +2145,29 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
       if (!cat) return;
       const newName = prompt('請輸入新的分類名稱：', cat.name);
       if (newName && newName.trim()) {
+        const oldName = cat.name;
         cat.name = newName.trim();
         const newIcon = prompt('請輸入分類 Emoji 圖示：', cat.icon || '📁');
         if (newIcon) cat.icon = newIcon.trim();
+
+        // Update any bookmarks referencing the old category ID or old name
+        bookmarks.forEach(bm => {
+          if (bm.category_id === catId || bm.category_id === oldName) {
+            bm.category_id = catId;
+          }
+        });
 
         saveLocalData();
         renderCategoryManagerList();
         renderCategoryTabs();
         updateCategorySelectOptions();
+        renderGrid();
         showToast('分類已更新！', 'success');
 
         if (supabaseClient) {
           try {
             await supabaseClient.from('categories').update({ name: cat.name, icon: cat.icon }).eq('id', catId);
+            await supabaseClient.from('bookmarks').upsert(bookmarks);
           } catch (e) {
             console.error(e);
           }
@@ -2014,7 +2185,7 @@ create policy "Public Bookmarks" on bookmarks for all using (true) with check (t
 
       // Reassign bookmarks
       bookmarks.forEach(bm => {
-        if ((bm.category_id || bm.category) === catId) {
+        if (isBookmarkInCategory(bm, catId)) {
           bm.category_id = fallbackCatId;
         }
       });
