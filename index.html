@@ -3,49 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Portal - 智慧導航主頁</title>
+  <title>AI Portal - 雲端多裝置智慧導航管理中心</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Supabase JS Client for Cloud Sync -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg-gradient: radial-gradient(circle at 15% 15%, #131722 0%, #0a0c10 100%);
-      --card-bg: rgba(26, 32, 44, 0.65);
+      --bg-gradient: radial-gradient(circle at 15% 15%, #111622 0%, #080a0f 100%);
+      --card-bg: rgba(23, 30, 44, 0.7);
       --card-border: rgba(255, 255, 255, 0.08);
-      --card-hover-border: rgba(99, 102, 241, 0.4);
-      --card-hover-bg: rgba(35, 43, 60, 0.85);
+      --card-hover-border: rgba(99, 102, 241, 0.5);
+      --card-hover-bg: rgba(30, 38, 56, 0.9);
       --text-main: #f3f4f6;
       --text-muted: #9ca3af;
       --text-dim: #6b7280;
       --accent: #6366f1;
       --accent-hover: #4f46e5;
-      --accent-glow: rgba(99, 102, 241, 0.25);
-      --gemini-glow: rgba(59, 130, 246, 0.2);
-      --chatgpt-glow: rgba(16, 185, 129, 0.2);
-      --claude-glow: rgba(217, 119, 6, 0.2);
-      --deepseek-glow: rgba(14, 165, 233, 0.2);
-      --search-bg: rgba(17, 24, 39, 0.75);
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --search-bg: rgba(17, 24, 39, 0.8);
       --search-border: rgba(255, 255, 255, 0.12);
-      --tag-bg: rgba(255, 255, 255, 0.06);
+      --tag-bg: rgba(255, 255, 255, 0.07);
       --tag-active-bg: #4f46e5;
       --tag-active-text: #ffffff;
-      --modal-bg: #1e2533;
-      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      --modal-bg: #182030;
+      --modal-border: rgba(255, 255, 255, 0.12);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
     }
 
     [data-theme="light"] {
-      --bg-gradient: radial-gradient(circle at 15% 15%, #f0f4ff 0%, #e2e8f0 100%);
-      --card-bg: rgba(255, 255, 255, 0.8);
-      --card-border: rgba(0, 0, 0, 0.06);
-      --card-hover-border: rgba(99, 102, 241, 0.5);
+      --bg-gradient: radial-gradient(circle at 15% 15%, #f8fafc 0%, #e2e8f0 100%);
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --card-border: rgba(0, 0, 0, 0.08);
+      --card-hover-border: rgba(99, 102, 241, 0.6);
       --card-hover-bg: #ffffff;
-      --text-main: #1f2937;
+      --text-main: #111827;
       --text-muted: #4b5563;
       --text-dim: #9ca3af;
-      --search-bg: rgba(255, 255, 255, 0.9);
-      --search-border: rgba(0, 0, 0, 0.1);
+      --search-bg: rgba(255, 255, 255, 0.95);
+      --search-border: rgba(0, 0, 0, 0.12);
       --tag-bg: rgba(0, 0, 0, 0.05);
       --modal-bg: #ffffff;
+      --modal-border: rgba(0, 0, 0, 0.12);
       --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
     }
 
@@ -61,7 +64,7 @@
       background: var(--bg-gradient);
       min-height: 100vh;
       color: var(--text-main);
-      padding: 30px 24px 60px;
+      padding: 24px 20px 60px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -69,34 +72,33 @@
       overflow-x: hidden;
     }
 
-    /* Ambient background lights */
     .ambient-glow {
       position: fixed;
-      width: 600px;
-      height: 600px;
+      width: 650px;
+      height: 650px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(0, 0, 0, 0) 70%);
-      top: -150px;
-      left: -150px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.14) 0%, rgba(0, 0, 0, 0) 70%);
+      top: -180px;
+      left: -180px;
       pointer-events: none;
       z-index: 0;
     }
 
     .ambient-glow-2 {
       position: fixed;
-      width: 500px;
-      height: 500px;
+      width: 550px;
+      height: 550px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
-      bottom: -100px;
-      right: -100px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.09) 0%, rgba(0, 0, 0, 0) 70%);
+      bottom: -120px;
+      right: -120px;
       pointer-events: none;
       z-index: 0;
     }
 
     .container {
       width: 100%;
-      max-width: 1280px;
+      max-width: 1300px;
       z-index: 1;
       position: relative;
     }
@@ -106,7 +108,9 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 28px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .logo-section {
@@ -116,44 +120,76 @@
     }
 
     .logo-icon {
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.45);
       color: #fff;
     }
 
     .brand-title {
-      font-size: 1.4rem;
+      font-size: 1.45rem;
       font-weight: 800;
       letter-spacing: -0.5px;
-      background: linear-gradient(to right, #ffffff, #9ca3af);
+      background: linear-gradient(to right, #ffffff, #cbd5e1);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
     [data-theme="light"] .brand-title {
-      background: linear-gradient(to right, #111827, #4b5563);
+      background: linear-gradient(to right, #0f172a, #475569);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+    }
+
+    .cloud-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .cloud-status-badge.connected {
+      color: #10b981;
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .cloud-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #9ca3af;
+    }
+
+    .cloud-status-badge.connected .cloud-status-dot {
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
     }
 
     .clock-display {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
       color: var(--text-muted);
       background: var(--card-bg);
-      padding: 7px 14px;
+      padding: 6px 14px;
       border-radius: 20px;
       border: 1px solid var(--card-border);
       backdrop-filter: blur(10px);
@@ -163,14 +199,18 @@
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       color: var(--text-main);
-      width: 38px;
       height: 38px;
-      border-radius: 50%;
+      padding: 0 12px;
+      border-radius: 10px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
       backdrop-filter: blur(10px);
+      font-family: inherit;
     }
 
     .action-btn:hover {
@@ -179,18 +219,35 @@
       transform: translateY(-2px);
     }
 
-    /* Hero Search & Prompt Launcher */
+    .action-btn.icon-only {
+      width: 38px;
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    .action-btn.primary {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+    }
+
+    .action-btn.primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+
+    /* Hero Search Box & Prompt Launcher */
     .hero-search-box {
       background: var(--card-bg);
       border: 1px solid var(--search-border);
       border-radius: 20px;
-      padding: 22px;
-      margin-bottom: 30px;
+      padding: 20px 22px;
+      margin-bottom: 24px;
       backdrop-filter: blur(16px);
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
 
     .search-input-wrapper {
@@ -211,7 +268,7 @@
       background: var(--search-bg);
       border: 1px solid var(--search-border);
       border-radius: 14px;
-      padding: 14px 18px 14px 50px;
+      padding: 13px 18px 13px 50px;
       font-size: 1.05rem;
       color: var(--text-main);
       outline: none;
@@ -235,16 +292,15 @@
       font-weight: 600;
     }
 
-    /* Prompt Launch Bar Buttons */
     .prompt-launcher-buttons {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
     .launcher-label {
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;
@@ -255,13 +311,13 @@
     .launch-btn {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      border-radius: 10px;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 9px;
       background: var(--tag-bg);
       border: 1px solid var(--card-border);
       color: var(--text-main);
-      font-size: 0.88rem;
+      font-size: 0.84rem;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
@@ -275,45 +331,24 @@
       box-shadow: 0 4px 12px var(--accent-glow);
     }
 
-    .launch-btn.gemini:hover {
-      background: #1a73e8;
-      border-color: #1a73e8;
-      box-shadow: 0 4px 12px var(--gemini-glow);
+    /* Category Navigation Bar */
+    .category-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
     }
 
-    .launch-btn.chatgpt:hover {
-      background: #10a37f;
-      border-color: #10a37f;
-      box-shadow: 0 4px 12px var(--chatgpt-glow);
-    }
-
-    .launch-btn.claude:hover {
-      background: #d97706;
-      border-color: #d97706;
-      box-shadow: 0 4px 12px var(--claude-glow);
-    }
-
-    .launch-btn.deepseek:hover {
-      background: #0284c7;
-      border-color: #0284c7;
-      box-shadow: 0 4px 12px var(--deepseek-glow);
-    }
-
-    .launch-btn.perplexity:hover {
-      background: #0d9488;
-      border-color: #0d9488;
-      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
-    }
-
-    /* Category Filter Tabs */
     .filter-tabs {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 24px;
       overflow-x: auto;
-      padding-bottom: 6px;
+      padding-bottom: 4px;
       scrollbar-width: none;
+      flex: 1;
     }
 
     .filter-tabs::-webkit-scrollbar {
@@ -321,12 +356,12 @@
     }
 
     .tab-btn {
-      padding: 8px 18px;
+      padding: 8px 16px;
       border-radius: 12px;
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       color: var(--text-muted);
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
@@ -349,15 +384,21 @@
     }
 
     .tab-count {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       padding: 1px 6px;
       border-radius: 20px;
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.18);
       margin-left: 2px;
     }
 
+    .category-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     /* Grid Section */
-    .section-title {
+    .section-header {
       font-size: 1.15rem;
       font-weight: 700;
       color: var(--text-main);
@@ -374,7 +415,7 @@
       margin-bottom: 34px;
     }
 
-    /* AI Card */
+    /* Bookmark Card */
     .ai-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -390,7 +431,7 @@
       backdrop-filter: blur(12px);
       box-shadow: var(--shadow);
       cursor: pointer;
-      min-height: 120px;
+      min-height: 125px;
     }
 
     .ai-card::before {
@@ -400,7 +441,7 @@
       left: 0;
       right: 0;
       height: 3px;
-      background: var(--accent);
+      background: var(--card-theme-color, var(--accent));
       opacity: 0;
       transition: opacity 0.2s ease;
     }
@@ -427,6 +468,8 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      flex: 1;
+      overflow: hidden;
     }
 
     .card-icon {
@@ -436,14 +479,22 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.08);
       flex-shrink: 0;
+      font-size: 1.2rem;
+      overflow: hidden;
     }
 
-    .card-icon svg, .card-icon img {
+    .card-icon img {
       width: 24px;
       height: 24px;
+      object-fit: contain;
+    }
+
+    .card-info {
+      flex: 1;
+      overflow: hidden;
     }
 
     .card-info h3 {
@@ -454,6 +505,9 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .badge {
@@ -463,6 +517,7 @@
       border-radius: 4px;
       text-transform: uppercase;
       letter-spacing: 0.3px;
+      flex-shrink: 0;
     }
 
     .badge-hot {
@@ -486,14 +541,15 @@
     .card-actions {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 2px;
+      opacity: 0.8;
     }
 
-    .pin-btn, .delete-btn {
+    .card-action-btn {
       background: transparent;
       border: none;
       color: var(--text-dim);
-      padding: 4px;
+      padding: 5px;
       cursor: pointer;
       border-radius: 6px;
       display: flex;
@@ -501,16 +557,16 @@
       justify-content: center;
     }
 
-    .pin-btn:hover {
-      color: #eab308;
-      background: rgba(234, 179, 8, 0.15);
+    .card-action-btn:hover {
+      color: var(--text-main);
+      background: var(--tag-bg);
     }
 
-    .pin-btn.pinned {
+    .card-action-btn.pinned {
       color: #eab308;
     }
 
-    .delete-btn:hover {
+    .card-action-btn.delete:hover {
       color: #ef4444;
       background: rgba(239, 68, 68, 0.15);
     }
@@ -559,7 +615,7 @@
       transform: translateX(3px);
     }
 
-    /* Add Card Button */
+    /* Add Card Placeholder */
     .add-card {
       background: rgba(255, 255, 255, 0.02);
       border: 2px dashed var(--card-border);
@@ -571,12 +627,12 @@
       gap: 8px;
       color: var(--text-muted);
       cursor: pointer;
-      min-height: 120px;
+      min-height: 125px;
       text-decoration: none;
     }
 
     .add-card:hover {
-      background: rgba(99, 102, 241, 0.05);
+      background: rgba(99, 102, 241, 0.06);
       border-color: var(--accent);
       color: var(--text-main);
       transform: translateY(-2px);
@@ -592,54 +648,17 @@
       justify-content: center;
     }
 
-    /* Help Banner */
-    .chrome-tip-banner {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      border-radius: 14px;
-      padding: 14px 20px;
-      margin-top: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .chrome-tip-content {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.9rem;
-      color: var(--text-main);
-    }
-
-    .tip-btn {
-      background: #4f46e5;
-      color: #fff;
-      border: none;
-      padding: 6px 14px;
-      border-radius: 8px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .tip-btn:hover {
-      background: #4338ca;
-    }
-
-    /* Modal */
+    /* Modals */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.75);
       backdrop-filter: blur(8px);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 100;
-      padding: 20px;
+      padding: 16px;
     }
 
     .modal-backdrop.show {
@@ -648,12 +667,14 @@
 
     .modal-box {
       background: var(--modal-bg);
-      border: 1px solid var(--card-border);
+      border: 1px solid var(--modal-border);
       border-radius: 18px;
       width: 100%;
-      max-width: 500px;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
       padding: 24px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
     }
 
     .modal-header {
@@ -664,8 +685,11 @@
     }
 
     .modal-title {
-      font-size: 1.2rem;
+      font-size: 1.22rem;
       font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .close-modal {
@@ -673,7 +697,13 @@
       border: none;
       color: var(--text-dim);
       cursor: pointer;
-      font-size: 1.2rem;
+      font-size: 1.3rem;
+      line-height: 1;
+      padding: 4px;
+    }
+
+    .close-modal:hover {
+      color: var(--text-main);
     }
 
     .form-group {
@@ -688,7 +718,7 @@
       margin-bottom: 6px;
     }
 
-    .form-input, .form-select {
+    .form-input, .form-select, .form-textarea {
       width: 100%;
       background: var(--search-bg);
       border: 1px solid var(--search-border);
@@ -700,7 +730,7 @@
       font-family: inherit;
     }
 
-    .form-input:focus, .form-select:focus {
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
       border-color: var(--accent);
     }
 
@@ -712,59 +742,76 @@
     }
 
     .modal-btn {
-      padding: 8px 18px;
+      padding: 9px 18px;
       border-radius: 10px;
       font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
+      border: none;
     }
 
-    .modal-btn-cancel {
+    .modal-btn.cancel {
       background: var(--tag-bg);
       border: 1px solid var(--card-border);
       color: var(--text-muted);
     }
 
-    .modal-btn-submit {
+    .modal-btn.primary {
       background: var(--accent);
-      border: none;
       color: #fff;
     }
 
-    .guide-step {
-      margin-bottom: 14px;
-      font-size: 0.92rem;
-      line-height: 1.6;
-      color: var(--text-main);
+    .modal-btn.primary:hover {
+      background: var(--accent-hover);
     }
 
-    .guide-step strong {
-      color: #818cf8;
-    }
-
-    .copy-path-box {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-family: monospace;
-      font-size: 0.85rem;
-      word-break: break-all;
-      margin: 8px 0;
+    /* Category Item in Manager */
+    .category-manager-list {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border: 1px solid var(--card-border);
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+      max-height: 280px;
+      overflow-y: auto;
     }
 
-    .copy-btn {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      cursor: pointer;
+    .category-manager-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--tag-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      gap: 10px;
+    }
+
+    .cat-item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+
+    .cat-item-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* Code SQL Box */
+    .sql-code-box {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 12px;
+      border-radius: 10px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      max-height: 160px;
+      overflow-y: auto;
+      border: 1px solid var(--card-border);
+      color: #a5f3fc;
+      margin: 10px 0;
+      white-space: pre-wrap;
     }
 
     /* Footer */
@@ -773,9 +820,12 @@
       text-align: center;
       font-size: 0.85rem;
       color: var(--text-dim);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
     }
 
-    /* Empty state */
     .empty-state {
       text-align: center;
       padding: 40px 20px;
@@ -785,7 +835,7 @@
 
     @media (max-width: 768px) {
       body {
-        padding: 20px 14px 40px;
+        padding: 16px 12px 40px;
       }
       .card-grid {
         grid-template-columns: 1fr;
@@ -795,7 +845,15 @@
       }
       .launch-btn {
         padding: 6px 10px;
-        font-size: 0.8rem;
+        font-size: 0.78rem;
+      }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .header-actions {
+        width: 100%;
+        justify-content: space-between;
       }
     }
   </style>
@@ -816,11 +874,34 @@
         <div>
           <div class="brand-title">AI Portal</div>
         </div>
+        <div class="cloud-status-badge" id="cloudStatusBadge" onclick="openCloudModal()" title="點擊設定跨裝置雲端同步">
+          <span class="cloud-status-dot"></span>
+          <span id="cloudStatusText">本地模式</span>
+        </div>
       </div>
 
       <div class="header-actions">
         <div class="clock-display" id="clock">00:00:00</div>
-        <button class="action-btn" id="themeToggle" title="切換深淺模式">
+        <button class="action-btn" onclick="openCloudModal()" title="雲端跨裝置同步設定">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+          </svg>
+          雲端同步
+        </button>
+        <button class="action-btn" onclick="openCategoryModal()" title="管理與編輯分類">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path>
+          </svg>
+          管理分類
+        </button>
+        <button class="action-btn primary" onclick="openAddBookmarkModal()" title="新增連結">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          新增連結
+        </button>
+        <button class="action-btn icon-only" id="themeToggle" title="切換深淺模式">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="5"></circle>
             <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -831,13 +912,6 @@
             <line x1="21" y1="12" x2="23" y2="12"></line>
             <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-          </svg>
-        </button>
-        <button class="action-btn" id="guideBtn" onclick="openGuideModal()" title="設定為 Chrome 起始頁教學">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
           </svg>
         </button>
       </div>
@@ -856,38 +930,38 @@
 
       <div class="prompt-launcher-buttons">
         <span class="launcher-label">直達提問：</span>
-        <button class="launch-btn gemini" onclick="launchAI('gemini')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="#388bfd">
+        <button class="launch-btn" onclick="launchAI('gemini')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#388bfd">
             <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/>
           </svg>
           Google Gemini
         </button>
-        <button class="launch-btn chatgpt" onclick="launchAI('chatgpt')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="#10a37f">
+        <button class="launch-btn" onclick="launchAI('chatgpt')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#10a37f">
             <circle cx="12" cy="12" r="10"/>
           </svg>
           ChatGPT
         </button>
-        <button class="launch-btn claude" onclick="launchAI('claude')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="#d97706">
+        <button class="launch-btn" onclick="launchAI('claude')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#d97706">
             <circle cx="12" cy="12" r="9"/>
           </svg>
           Claude
         </button>
-        <button class="launch-btn deepseek" onclick="launchAI('deepseek')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="#0284c7">
+        <button class="launch-btn" onclick="launchAI('deepseek')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#0284c7">
             <circle cx="12" cy="12" r="9"/>
           </svg>
           DeepSeek
         </button>
-        <button class="launch-btn perplexity" onclick="launchAI('perplexity')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="#0d9488">
+        <button class="launch-btn" onclick="launchAI('perplexity')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#0d9488">
             <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
           </svg>
           Perplexity
         </button>
         <button class="launch-btn" onclick="launchAI('google')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
@@ -896,41 +970,16 @@
       </div>
     </div>
 
-    <!-- Category Filter Tabs -->
-    <div class="filter-tabs" id="categoryTabs">
-      <button class="tab-btn active" data-category="all">
-        全部模型
-        <span class="tab-count" id="count-all">0</span>
-      </button>
-      <button class="tab-btn" data-category="pinned">
-        ⭐ 我的常用
-        <span class="tab-count" id="count-pinned">0</span>
-      </button>
-      <button class="tab-btn" data-category="chat">
-        💬 旗艦對話
-        <span class="tab-count" id="count-chat">0</span>
-      </button>
-      <button class="tab-btn" data-category="search">
-        🔍 搜尋研究
-        <span class="tab-count" id="count-search">0</span>
-      </button>
-      <button class="tab-btn" data-category="dev">
-        💻 程式開發
-        <span class="tab-count" id="count-dev">0</span>
-      </button>
-      <button class="tab-btn" data-category="media">
-        🎨 繪圖影音
-        <span class="tab-count" id="count-media">0</span>
-      </button>
-      <button class="tab-btn" data-category="work">
-        ⚡ 辦公生產力
-        <span class="tab-count" id="count-work">0</span>
-      </button>
+    <!-- Category Tabs Navigation -->
+    <div class="category-nav-bar">
+      <div class="filter-tabs" id="categoryTabs">
+        <!-- Dynamically Generated -->
+      </div>
     </div>
 
     <!-- AI Grid Container -->
-    <div class="section-title">
-      <span id="currentCategoryTitle">所有 AI 工具</span>
+    <div class="section-header">
+      <span id="currentCategoryTitle">所有站點與工具</span>
       <span style="font-size: 0.82rem; color: var(--text-dim); font-weight: normal;">點擊直接開啟新分頁</span>
     </div>
 
@@ -938,430 +987,447 @@
       <!-- Generated dynamically -->
     </div>
 
-    <!-- Chrome Startup Setup Tip Banner -->
-    <div class="chrome-tip-banner">
-      <div class="chrome-tip-content">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="16" x2="12" y2="12"></line>
-          <line x1="12" y1="8" x2="12.01" y2="8"></line>
-        </svg>
-        <div>
-          <strong>想讓 Chrome 一開啟就自動顯示這個導航頁？</strong>
-          <div style="font-size: 0.8rem; color: var(--text-muted);">只需將本檔案設定為 Chrome 的「起始網頁」即可！</div>
-        </div>
-      </div>
-      <button class="tip-btn" onclick="openGuideModal()">查看設定步驟</button>
-    </div>
-
     <footer>
-      AI Portal Dashboard • 輕量、快速、免伺服器 • 隨開即用
+      <div>AI Portal • 跨裝置雲端導航管理中心 • 支援 Supabase 即時同步</div>
+      <div style="display: flex; gap: 12px; font-size: 0.8rem;">
+        <a href="javascript:void(0)" onclick="exportDataJSON()" style="color: var(--accent); text-decoration: none;">匯出備份 (JSON)</a>
+        <span>•</span>
+        <a href="javascript:void(0)" onclick="document.getElementById('importFileInput').click()" style="color: var(--accent); text-decoration: none;">匯入還原 (JSON)</a>
+        <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importDataJSON(event)">
+      </div>
     </footer>
   </div>
 
-  <!-- Add Custom AI Modal -->
-  <div class="modal-backdrop" id="addModal">
+  <!-- Add / Edit Bookmark Modal -->
+  <div class="modal-backdrop" id="bookmarkModal">
     <div class="modal-box">
       <div class="modal-header">
-        <div class="modal-title">新增自訂 AI 工具</div>
-        <button class="close-modal" onclick="closeAddModal()">&times;</button>
+        <div class="modal-title" id="bookmarkModalTitle">新增網站連結</div>
+        <button class="close-modal" onclick="closeBookmarkModal()">&times;</button>
       </div>
-      <form id="customAiForm">
+      <form id="bookmarkForm">
+        <input type="hidden" id="bookmarkId">
         <div class="form-group">
-          <label class="form-label">工具名稱 *</label>
-          <input type="text" id="customName" class="form-input" placeholder="例如：Sora, Suno, Cursor..." required>
+          <label class="form-label">網站名稱 *</label>
+          <input type="text" id="bmName" class="form-input" placeholder="例如：Claude 3.7, Midjourney..." required>
         </div>
         <div class="form-group">
           <label class="form-label">網站網址 (URL) *</label>
-          <input type="url" id="customUrl" class="form-input" placeholder="https://..." required>
+          <input type="url" id="bmUrl" class="form-input" placeholder="https://..." required onblur="autoFillIcon()">
         </div>
         <div class="form-group">
-          <label class="form-label">功能簡介</label>
-          <input type="text" id="customDesc" class="form-input" placeholder="一句話描述這個工具的特色...">
-        </div>
-        <div class="form-group">
-          <label class="form-label">分類類別</label>
-          <select id="customCategory" class="form-select">
-            <option value="chat">💬 旗艦對話</option>
-            <option value="search">🔍 搜尋研究</option>
-            <option value="dev">💻 程式開發</option>
-            <option value="media">🎨 繪圖影音</option>
-            <option value="work">⚡ 辦公生產力</option>
+          <label class="form-label">所屬分類 *</label>
+          <select id="bmCategory" class="form-select" required>
+            <!-- Generated dynamically -->
           </select>
         </div>
+        <div class="form-group">
+          <label class="form-label">功能特色簡介</label>
+          <input type="text" id="bmDesc" class="form-input" placeholder="一句話描述這個網站或工具的特色...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">標籤 (用逗號隔開)</label>
+          <input type="text" id="bmTags" class="form-input" placeholder="例如：Google, 多模態, 程式碼">
+        </div>
+        <div class="form-group">
+          <label class="form-label">徽章標籤 (選填)</label>
+          <input type="text" id="bmBadge" class="form-input" placeholder="例如：熱門, 推薦, 神器, NEW">
+        </div>
         <div class="modal-footer">
-          <button type="button" class="modal-btn modal-btn-cancel" onclick="closeAddModal()">取消</button>
-          <button type="submit" class="modal-btn modal-btn-submit">確認新增</button>
+          <button type="button" class="modal-btn cancel" onclick="closeBookmarkModal()">取消</button>
+          <button type="submit" class="modal-btn primary">儲存</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Chrome Setup Guide Modal -->
-  <div class="modal-backdrop" id="guideModal">
-    <div class="modal-box" style="max-width: 580px;">
+  <!-- Category Manager Modal -->
+  <div class="modal-backdrop" id="categoryModal">
+    <div class="modal-box">
       <div class="modal-header">
-        <div class="modal-title">📌 如何讓 Chrome 開啟時自動打開此頁面？</div>
-        <button class="close-modal" onclick="closeGuideModal()">&times;</button>
+        <div class="modal-title">📂 分類管理中心</div>
+        <button class="close-modal" onclick="closeCategoryModal()">&times;</button>
       </div>
       <div>
-        <div class="guide-step">
-          <strong>步驟 1. 複製本頁面的本地路徑：</strong>
-          <div class="copy-path-box">
-            <span id="currentFilePath"></span>
-            <button class="copy-btn" onclick="copyFilePath()">複製網址</button>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">你可以新增、修改或刪除導航分類：</div>
+        
+        <div class="category-manager-list" id="categoryManagerList">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div style="border-top: 1px solid var(--card-border); padding-top: 16px; margin-top: 16px;">
+          <div style="font-size: 0.95rem; font-weight: 700; margin-bottom: 10px;">➕ 新增分類</div>
+          <div style="display: grid; grid-template-columns: 80px 1fr auto; gap: 8px;">
+            <input type="text" id="newCatIcon" class="form-input" placeholder="圖示 (如 🚀)" value="📁">
+            <input type="text" id="newCatName" class="form-input" placeholder="分類名稱 (如 常用工具)">
+            <button class="action-btn primary" type="button" onclick="addNewCategory()">新增</button>
           </div>
-        </div>
-        <div class="guide-step">
-          <strong>步驟 2. 開啟 Chrome 設定：</strong>
-          <br>點擊 Chrome 右上角選單「⋮」 ➔ <strong>「設定」</strong> (或在網址列輸入 <code>chrome://settings/onStartup</code>)。
-        </div>
-        <div class="guide-step">
-          <strong>步驟 3. 變更起始畫面：</strong>
-          <br>在左側點擊<strong>「起始畫面」</strong> ➔ 勾選<strong>「開啟特定網頁或一組網頁」</strong>。
-        </div>
-        <div class="guide-step">
-          <strong>步驟 4. 加入本頁面：</strong>
-          <br>點擊<strong>「新增網頁」</strong>，將步驟 1 複製的網址貼上並儲存即可！
-        </div>
-        <div class="guide-step" style="margin-top: 15px; padding: 10px; background: rgba(99,102,241,0.1); border-radius: 8px;">
-          💡 <strong>小提示</strong>：你也可以按下鍵盤 <kbd>Ctrl</kbd> + <kbd>D</kbd> 將此頁加入書籤列最左側，隨時一鍵點擊返回！
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="modal-btn modal-btn-submit" onclick="closeGuideModal()">我知道了</button>
+        <button type="button" class="modal-btn primary" onclick="closeCategoryModal()">完成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cloud Sync Config Modal (Supabase) -->
+  <div class="modal-backdrop" id="cloudModal">
+    <div class="modal-box" style="max-width: 560px;">
+      <div class="modal-header">
+        <div class="modal-title">☁️ 跨裝置雲端同步設定 (Supabase)</div>
+        <button class="close-modal" onclick="closeCloudModal()">&times;</button>
+      </div>
+      <div>
+        <div style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
+          只要連線至免費的 <strong>Supabase</strong> 資料庫，無論在手機、平板、公司電腦或家中設備開啟 <code style="color:var(--accent);">https://sunnyportal.github.io/OS/</code>，所有建立的分類與連結都會<strong>自動即時同步</strong>！
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Supabase Project URL *</label>
+          <input type="text" id="supabaseUrlInput" class="form-input" placeholder="https://xxxxxxxx.supabase.co">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Supabase Anon Key (公鑰) *</label>
+          <input type="password" id="supabaseKeyInput" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+        </div>
+
+        <div style="background: var(--tag-bg); border-radius: 12px; padding: 12px; border: 1px solid var(--card-border); margin-top: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <strong style="font-size: 0.84rem;">📋 第一次使用？在 Supabase 貼上此 SQL 建立資料表：</strong>
+            <button class="launch-btn" style="padding: 2px 8px; font-size: 0.75rem;" onclick="copySupabaseSQL()">複製 SQL</button>
+          </div>
+          <div class="sql-code-box" id="supabaseSqlCode">create table if not exists categories (
+  id text primary key,
+  name text not null,
+  icon text default '📁',
+  color text default '#6366f1',
+  sort_order int default 0,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+create table if not exists bookmarks (
+  id text primary key,
+  name text not null,
+  url text not null,
+  desc_text text default '',
+  category_id text,
+  badge text default '',
+  badge_type text default 'hot',
+  tags text[] default array[]::text[],
+  icon_url text default '',
+  is_pinned boolean default false,
+  sort_order int default 0,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+alter table categories enable row level security;
+alter table bookmarks enable row level security;
+create policy "Public Categories" on categories for all using (true) with check (true);
+create policy "Public Bookmarks" on bookmarks for all using (true) with check (true);</div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: space-between;">
+        <button type="button" class="modal-btn cancel" onclick="disconnectCloud()">清除雲端連線</button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="modal-btn cancel" onclick="closeCloudModal()">取消</button>
+          <button type="button" class="modal-btn primary" onclick="saveCloudConfig()">連線並同步</button>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    // Preset AI Services
-    const defaultServices = [
-      // 💬 旗艦對話 (Chat)
+    // Initial Default Categories
+    const defaultCategories = [
+      { id: 'chat', name: '旗艦對話', icon: '💬', color: '#6366f1', sort_order: 1 },
+      { id: 'search', name: '搜尋研究', icon: '🔍', color: '#0d9488', sort_order: 2 },
+      { id: 'dev', name: '程式開發', icon: '💻', color: '#f97316', sort_order: 3 },
+      { id: 'media', name: '繪圖影音', icon: '🎨', color: '#ec4899', sort_order: 4 },
+      { id: 'work', name: '辦公生產力', icon: '⚡', color: '#eab308', sort_order: 5 }
+    ];
+
+    // Initial Default Bookmarks
+    const defaultBookmarks = [
       {
         id: 'gemini',
         name: 'Google Gemini',
-        category: 'chat',
+        category_id: 'chat',
         url: 'https://gemini.google.com/',
-        desc: 'Google 旗艦多模態大模型，支援超長 Context、聯網與即時推理。',
+        desc_text: 'Google 旗艦多模態大模型，支援超長 Context、聯網與即時推理。',
         badge: '熱門',
-        badgeType: 'hot',
-        color: '#1a73e8',
-        icon: `<svg viewBox="0 0 24 24" fill="#388bfd"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>`,
+        badge_type: 'hot',
+        is_pinned: true,
         tags: ['Google', '多模態', '超長文本']
       },
       {
         id: 'chatgpt',
         name: 'ChatGPT',
-        category: 'chat',
+        category_id: 'chat',
         url: 'https://chatgpt.com/',
-        desc: 'OpenAI 研發，支援 GPT-4o、Canvas、語音模式與各類 GPTs。',
+        desc_text: 'OpenAI 研發，支援 GPT-4o、Canvas、語音模式與各類 GPTs。',
         badge: '熱門',
-        badgeType: 'hot',
-        color: '#10a37f',
-        icon: `<svg viewBox="0 0 24 24" fill="#10a37f"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.259 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7466-7.0729z"/></svg>`,
+        badge_type: 'hot',
+        is_pinned: true,
         tags: ['OpenAI', 'GPT-4o', '對話']
       },
       {
         id: 'claude',
         name: 'Claude',
-        category: 'chat',
+        category_id: 'chat',
         url: 'https://claude.ai/',
-        desc: 'Anthropic 旗艦模型，在程式碼編寫、長文摘要及邏輯推理表現頂尖。',
+        desc_text: 'Anthropic 旗艦模型，在程式碼編寫、長文摘要及邏輯推理表現頂尖。',
         badge: '推薦',
-        badgeType: 'new',
-        color: '#d97706',
-        icon: `<svg viewBox="0 0 24 24" fill="#d97706"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>`,
+        badge_type: 'new',
+        is_pinned: true,
         tags: ['Anthropic', 'Sonnet', '程式碼']
       },
       {
         id: 'deepseek',
         name: 'DeepSeek',
-        category: 'chat',
+        category_id: 'chat',
         url: 'https://chat.deepseek.com/',
-        desc: '開源頂級推理模型 DeepSeek-R1 / V3，數理邏輯與代碼能力極強。',
+        desc_text: '開源頂級推理模型 DeepSeek-R1 / V3，數理邏輯與代碼能力極強。',
         badge: '熱門',
-        badgeType: 'hot',
-        color: '#0284c7',
-        icon: `<svg viewBox="0 0 24 24" fill="#0284c7"><circle cx="12" cy="12" r="9"/><path d="M12 8v8m-4-4h8" stroke="#fff" stroke-width="2"/></svg>`,
+        badge_type: 'hot',
+        is_pinned: true,
         tags: ['DeepSeek-R1', '開源', '推理']
       },
       {
         id: 'copilot',
         name: 'Microsoft Copilot',
-        category: 'chat',
+        category_id: 'chat',
         url: 'https://copilot.microsoft.com/',
-        desc: '微軟 AI 助手，整合 Bing 搜尋、DALL-E 3 繪圖與 Office 協作。',
+        desc_text: '微軟 AI 助手，整合 Bing 搜尋、DALL-E 3 繪圖與 Office 協作。',
         badge: '',
-        color: '#0078d4',
-        icon: `<svg viewBox="0 0 24 24" fill="#0078d4"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l-10-5v6l10 5 10-5v-6l-10 5zm0 7l-10-5v6l10 5 10-5v-6l-10 5z"/></svg>`,
+        is_pinned: false,
         tags: ['Microsoft', 'Bing', '日常助理']
       },
       {
         id: 'grok',
         name: 'Grok (xAI)',
-        category: 'chat',
+        category_id: 'chat',
         url: 'https://grok.com/',
-        desc: 'xAI 打造，具備 X 平台即時數據整合能力與幽默思維模式。',
+        desc_text: 'xAI 打造，具備 X 平台即時數據整合能力與幽默思維模式。',
         badge: '新',
-        badgeType: 'new',
-        color: '#ffffff',
-        icon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+        badge_type: 'new',
+        is_pinned: false,
         tags: ['xAI', '即時聯網', 'Elon Musk']
       },
       {
-        id: 'poe',
-        name: 'Poe (Quora)',
-        category: 'chat',
-        url: 'https://poe.com/',
-        desc: '聚合平台，可同時體驗 ChatGPT、Claude、Llama 等眾多模型與機器人。',
-        badge: '',
-        color: '#8b5cf6',
-        icon: `<svg viewBox="0 0 24 24" fill="#8b5cf6"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M9 10h6m-6 4h4" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`,
-        tags: ['聚合平台', '多模型切換']
-      },
-      {
-        id: 'kimi',
-        name: 'Kimi (月之暗面)',
-        category: 'chat',
-        url: 'https://kimi.moonshot.cn/',
-        desc: '支援超長文本解析，擅長研報閱讀、論文整理與長文章提煉。',
-        badge: '',
-        color: '#6366f1',
-        icon: `<svg viewBox="0 0 24 24" fill="#6366f1"><circle cx="12" cy="12" r="10"/><path d="M8 12h8" stroke="#fff" stroke-width="2"/></svg>`,
-        tags: ['長文本', '文檔閱讀']
-      },
-
-      // 🔍 搜尋與研究 (Search & Research)
-      {
         id: 'perplexity',
         name: 'Perplexity AI',
-        category: 'search',
+        category_id: 'search',
         url: 'https://www.perplexity.ai/',
-        desc: '新世代 AI 搜尋引擎，精準引述來源出處，整合深度研究 Pro Search。',
+        desc_text: '新世代 AI 搜尋引擎，精準引述來源出處，整合深度研究 Pro Search。',
         badge: '強烈推薦',
-        badgeType: 'hot',
-        color: '#0d9488',
-        icon: `<svg viewBox="0 0 24 24" fill="#0d9488"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="2" x2="12" y2="22" stroke="#fff" stroke-width="1.5"/></svg>`,
+        badge_type: 'hot',
+        is_pinned: true,
         tags: ['AI 搜尋', '學術引用', '即時資訊']
-      },
-      {
-        id: 'genspark',
-        name: 'Genspark',
-        category: 'search',
-        url: 'https://www.genspark.ai/',
-        desc: 'AI 驅動的自主研究平台，自動生成綜合性 Sparkpage 頁面報告。',
-        badge: '新',
-        badgeType: 'new',
-        color: '#ec4899',
-        icon: `<svg viewBox="0 0 24 24" fill="#ec4899"><polygon points="12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9 12 2"/></svg>`,
-        tags: ['AI 搜尋', '自動報告']
-      },
-      {
-        id: 'felo',
-        name: 'Felo AI',
-        category: 'search',
-        url: 'https://felo.ai/',
-        desc: '跨語言即時 AI 搜尋引擎，支援繁中、日文及全球資訊整合與心智圖生成。',
-        badge: '',
-        color: '#3b82f6',
-        icon: `<svg viewBox="0 0 24 24" fill="#3b82f6"><circle cx="12" cy="12" r="10"/><path d="M12 8v8m-4-4h8" stroke="#fff" stroke-width="2"/></svg>`,
-        tags: ['跨語言', '心智圖', '搜尋']
       },
       {
         id: 'notebooklm',
         name: 'Google NotebookLM',
-        category: 'search',
+        category_id: 'search',
         url: 'https://notebooklm.google.com/',
-        desc: 'Google 個人 AI 研究筆記本，支援上傳 PDF/網頁並一鍵生成 Podcast 語音。',
+        desc_text: 'Google 個人 AI 研究筆記本，支援上傳 PDF/網頁並一鍵生成 Podcast 語音。',
         badge: '推薦',
-        badgeType: 'new',
-        color: '#10b981',
-        icon: `<svg viewBox="0 0 24 24" fill="#10b981"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+        badge_type: 'new',
+        is_pinned: false,
         tags: ['Google', '筆記研究', 'AI Podcast']
       },
-
-      // 💻 程式開發 (Code & Dev)
       {
         id: 'v0',
         name: 'v0 by Vercel',
-        category: 'dev',
+        category_id: 'dev',
         url: 'https://v0.dev/',
-        desc: '自然語言生成現代 React / Tailwind UI 與全端原型，秒級預覽。',
+        desc_text: '自然語言生成現代 React / Tailwind UI 與全端原型，秒級預覽。',
         badge: '神器',
-        badgeType: 'hot',
-        color: '#000000',
-        icon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 22h20L12 2z"/></svg>`,
+        badge_type: 'hot',
+        is_pinned: false,
         tags: ['UI 生成', 'React', 'Tailwind']
       },
       {
         id: 'bolt',
         name: 'Bolt.new',
-        category: 'dev',
+        category_id: 'dev',
         url: 'https://bolt.new/',
-        desc: '瀏覽器中直接運行全端 Node / Next.js / Vite 專案的 AI 開發環境。',
+        desc_text: '瀏覽器中直接運行全端 Node / Next.js / Vite 專案的 AI 開發環境。',
         badge: '熱門',
-        badgeType: 'hot',
-        color: '#f97316',
-        icon: `<svg viewBox="0 0 24 24" fill="#f97316"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+        badge_type: 'hot',
+        is_pinned: false,
         tags: ['全端生成', 'WebContainers']
       },
       {
-        id: 'cursor',
-        name: 'Cursor',
-        category: 'dev',
-        url: 'https://cursor.com/',
-        desc: '新一代 AI 優先 IDE 編輯器，多檔案智慧編程與 Agent 自動除錯。',
-        badge: '推薦',
-        badgeType: 'new',
-        color: '#6366f1',
-        icon: `<svg viewBox="0 0 24 24" fill="#6366f1"><rect x="3" y="3" width="18" height="18" rx="4"/><line x1="8" y1="12" x2="16" y2="12" stroke="#fff" stroke-width="2"/></svg>`,
-        tags: ['AI 編輯器', '代碼生成']
-      },
-      {
-        id: 'github-copilot',
-        name: 'GitHub Copilot',
-        category: 'dev',
-        url: 'https://github.com/copilot',
-        desc: '全球最普及的程式碼自動補全與 GitHub 深度整合 AI 助理。',
-        badge: '',
-        color: '#24292e',
-        icon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>`,
-        tags: ['GitHub', '自動補全']
-      },
-
-      // 🎨 繪圖與多媒體 (Media & Creative)
-      {
         id: 'midjourney',
         name: 'Midjourney',
-        category: 'media',
+        category_id: 'media',
         url: 'https://www.midjourney.com/',
-        desc: '業界最高畫質與藝術感影像生成模型，支援 Web 介面生成與編輯。',
+        desc_text: '業界最高畫質與藝術感影像生成模型，支援 Web 介面生成與編輯。',
         badge: '標竿',
-        badgeType: 'hot',
-        color: '#3b82f6',
-        icon: `<svg viewBox="0 0 24 24" fill="#3b82f6"><circle cx="12" cy="12" r="10"/><path d="M8 15s1.5 2 4 2 4-2 4-2" stroke="#fff" stroke-width="2"/></svg>`,
+        badge_type: 'hot',
+        is_pinned: false,
         tags: ['AI 繪圖', '超擬真', '藝術風格']
       },
       {
-        id: 'ideogram',
-        name: 'Ideogram',
-        category: 'media',
-        url: 'https://ideogram.ai/',
-        desc: '文字排版精準度最高的 AI 繪圖工具，適合海報、標誌與字體設計。',
-        badge: '推薦',
-        badgeType: 'new',
-        color: '#a855f7',
-        icon: `<svg viewBox="0 0 24 24" fill="#a855f7"><rect x="3" y="3" width="18" height="18" rx="4"/><text x="7" y="16" fill="#fff" font-weight="bold" font-size="12">I</text></svg>`,
-        tags: ['文字渲染', 'Logo 設計']
-      },
-      {
-        id: 'kling',
-        name: 'Kling AI (可靈)',
-        category: 'media',
-        url: 'https://klingai.com/',
-        desc: '強大的物理世界動態模擬 AI 影片生成模型，畫面流暢度極高。',
-        badge: '熱門',
-        badgeType: 'hot',
-        color: '#f43f5e',
-        icon: `<svg viewBox="0 0 24 24" fill="#f43f5e"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
-        tags: ['影片生成', '高畫質', '物理動態']
-      },
-      {
-        id: 'suno',
-        name: 'Suno AI',
-        category: 'media',
-        url: 'https://suno.com/',
-        desc: '輸入歌詞或風格即可創作完整人聲廣播級歌曲與多元配樂。',
-        badge: '必玩',
-        badgeType: 'new',
-        color: '#e11d48',
-        icon: `<svg viewBox="0 0 24 24" fill="#e11d48"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13" stroke="#e11d48" stroke-width="2"/></svg>`,
-        tags: ['AI 音樂', '人聲歌曲']
-      },
-
-      // ⚡ 辦公生產力 (Productivity & Work)
-      {
         id: 'gamma',
         name: 'Gamma App',
-        category: 'work',
+        category_id: 'work',
         url: 'https://gamma.app/',
-        desc: '輸入主題或大綱，AI 一鍵快速生成設計精美的簡報 (PPT)、網頁與文檔。',
+        desc_text: '輸入主題或大綱，AI 一鍵快速生成設計精美的簡報 (PPT)、網頁與文檔。',
         badge: '推薦',
-        badgeType: 'hot',
-        color: '#ec4899',
-        icon: `<svg viewBox="0 0 24 24" fill="#ec4899"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21" stroke="#ec4899" stroke-width="2"/></svg>`,
+        badge_type: 'hot',
+        is_pinned: false,
         tags: ['一鍵 PPT', '簡報設計']
-      },
-      {
-        id: 'notion',
-        name: 'Notion AI',
-        category: 'work',
-        url: 'https://www.notion.so/',
-        desc: '深度整合 Notion 工作區，支援會議記錄提煉、文案擴寫與智慧問答。',
-        badge: '',
-        color: '#000000',
-        icon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4v16h16V4H4zm12 12H8v-2h8v2zm0-4H8v-2h8v2zm0-4H8V6h8v2z"/></svg>`,
-        tags: ['知識庫', '協同辦公']
-      },
-      {
-        id: 'deepl',
-        name: 'DeepL 翻譯',
-        category: 'work',
-        url: 'https://www.deepl.com/translator',
-        desc: '全球最自然精準的神經網絡翻譯工具，支援文檔整篇翻譯與語氣微調。',
-        badge: '精準',
-        badgeType: 'new',
-        color: '#0f2b48',
-        icon: `<svg viewBox="0 0 24 24" fill="#0f2b48"><circle cx="12" cy="12" r="10"/></svg>`,
-        tags: ['翻譯神器', '多語言']
       }
     ];
 
-    // State Management
-    let services = [];
-    let pinnedIds = [];
+    // State Variables
+    let categories = [];
+    let bookmarks = [];
     let currentCategory = 'all';
+    let supabaseClient = null;
+    let isCloudConnected = false;
 
-    // Init data
-    function initData() {
-      const storedPinned = localStorage.getItem('ai_portal_pinned');
-      pinnedIds = storedPinned ? JSON.parse(storedPinned) : ['gemini', 'chatgpt', 'claude', 'perplexity'];
-
-      const customServices = localStorage.getItem('ai_portal_custom');
-      const customList = customServices ? JSON.parse(customServices) : [];
-
-      services = [...defaultServices, ...customList];
+    // Database / Storage Initializer
+    async function initApp() {
+      loadLocalData();
+      initSupabase();
+      renderCategoryTabs();
       renderGrid();
-      updateCounts();
+      updateCategorySelectOptions();
     }
 
-    // Save Pinned State
-    function togglePin(e, id) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (pinnedIds.includes(id)) {
-        pinnedIds = pinnedIds.filter(item => item !== id);
+    // Local Storage Loader
+    function loadLocalData() {
+      const storedCats = localStorage.getItem('ai_portal_categories_v2');
+      categories = storedCats ? JSON.parse(storedCats) : defaultCategories;
+
+      const storedBms = localStorage.getItem('ai_portal_bookmarks_v2');
+      bookmarks = storedBms ? JSON.parse(storedBms) : defaultBookmarks;
+    }
+
+    function saveLocalData() {
+      localStorage.setItem('ai_portal_categories_v2', JSON.stringify(categories));
+      localStorage.setItem('ai_portal_bookmarks_v2', JSON.stringify(bookmarks));
+    }
+
+    // Supabase Cloud Sync Initializer
+    function initSupabase() {
+      const sbUrl = localStorage.getItem('ai_portal_sb_url');
+      const sbKey = localStorage.getItem('ai_portal_sb_key');
+
+      if (sbUrl && sbKey && window.supabase) {
+        try {
+          supabaseClient = window.supabase.createClient(sbUrl, sbKey);
+          isCloudConnected = true;
+          updateCloudStatusUI(true);
+          syncFromCloud();
+          setupRealtime();
+        } catch (err) {
+          console.error('Supabase Init Error:', err);
+          updateCloudStatusUI(false);
+        }
       } else {
-        pinnedIds.push(id);
+        updateCloudStatusUI(false);
       }
-      localStorage.setItem('ai_portal_pinned', JSON.stringify(pinnedIds));
-      renderGrid();
-      updateCounts();
     }
 
-    // Delete Custom Item
-    function deleteCustomItem(e, id) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (confirm('確定要刪除這個自訂工具嗎？')) {
-        let customServices = JSON.parse(localStorage.getItem('ai_portal_custom') || '[]');
-        customServices = customServices.filter(item => item.id !== id);
-        localStorage.setItem('ai_portal_custom', JSON.stringify(customServices));
-        pinnedIds = pinnedIds.filter(item => item !== id);
-        localStorage.setItem('ai_portal_pinned', JSON.stringify(pinnedIds));
-        initData();
+    function updateCloudStatusUI(connected) {
+      const badge = document.getElementById('cloudStatusBadge');
+      const text = document.getElementById('cloudStatusText');
+      if (connected) {
+        badge.classList.add('connected');
+        text.innerText = '雲端已同步';
+      } else {
+        badge.classList.remove('connected');
+        text.innerText = '本地模式';
       }
+    }
+
+    // Sync From Cloud to Local
+    async function syncFromCloud() {
+      if (!supabaseClient) return;
+      try {
+        const { data: cloudCats, error: catErr } = await supabaseClient.from('categories').select('*').order('sort_order', { ascending: true });
+        const { data: cloudBms, error: bmErr } = await supabaseClient.from('bookmarks').select('*').order('sort_order', { ascending: true });
+
+        if (!catErr && cloudCats && cloudCats.length > 0) {
+          categories = cloudCats;
+        } else if (categories.length > 0 && (!cloudCats || cloudCats.length === 0)) {
+          // Push initial categories to cloud
+          await supabaseClient.from('categories').upsert(categories);
+        }
+
+        if (!bmErr && cloudBms && cloudBms.length > 0) {
+          bookmarks = cloudBms;
+        } else if (bookmarks.length > 0 && (!cloudBms || cloudBms.length === 0)) {
+          // Push initial bookmarks to cloud
+          await supabaseClient.from('bookmarks').upsert(bookmarks);
+        }
+
+        saveLocalData();
+        renderCategoryTabs();
+        renderGrid();
+        updateCategorySelectOptions();
+      } catch (err) {
+        console.warn('Sync from cloud notice:', err);
+      }
+    }
+
+    // Setup Realtime Sync
+    function setupRealtime() {
+      if (!supabaseClient) return;
+      supabaseClient.channel('schema-db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => syncFromCloud())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'bookmarks' }, () => syncFromCloud())
+        .subscribe();
+    }
+
+    // Render Category Navigation Tabs
+    function renderCategoryTabs() {
+      const tabsContainer = document.getElementById('categoryTabs');
+      tabsContainer.innerHTML = '';
+
+      // Tab: All
+      const allCount = bookmarks.length;
+      const allBtn = document.createElement('button');
+      allBtn.className = `tab-btn ${currentCategory === 'all' ? 'active' : ''}`;
+      allBtn.innerHTML = `🌐 全部模型 <span class="tab-count">${allCount}</span>`;
+      allBtn.onclick = () => selectCategory('all');
+      tabsContainer.appendChild(allBtn);
+
+      // Tab: Pinned / Favorites
+      const pinnedCount = bookmarks.filter(b => b.is_pinned).length;
+      const pinnedBtn = document.createElement('button');
+      pinnedBtn.className = `tab-btn ${currentCategory === 'pinned' ? 'active' : ''}`;
+      pinnedBtn.innerHTML = `⭐ 我的常用 <span class="tab-count">${pinnedCount}</span>`;
+      pinnedBtn.onclick = () => selectCategory('pinned');
+      tabsContainer.appendChild(pinnedBtn);
+
+      // Category Tabs
+      categories.forEach(cat => {
+        const count = bookmarks.filter(b => b.category_id === cat.id).length;
+        const btn = document.createElement('button');
+        btn.className = `tab-btn ${currentCategory === cat.id ? 'active' : ''}`;
+        btn.innerHTML = `${cat.icon || '📁'} ${cat.name} <span class="tab-count">${count}</span>`;
+        btn.onclick = () => selectCategory(cat.id);
+        tabsContainer.appendChild(btn);
+      });
+    }
+
+    function selectCategory(catId) {
+      currentCategory = catId;
+      renderCategoryTabs();
+
+      const titleMap = { all: '所有站點與工具', pinned: '⭐ 我的常用收藏' };
+      if (titleMap[catId]) {
+        document.getElementById('currentCategoryTitle').innerText = titleMap[catId];
+      } else {
+        const found = categories.find(c => c.id === catId);
+        document.getElementById('currentCategoryTitle').innerText = found ? `${found.icon || '📁'} ${found.name}` : '站點列表';
+      }
+
+      renderGrid();
     }
 
     // Render Grid
@@ -1370,31 +1436,22 @@
       const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
       grid.innerHTML = '';
 
-      let filtered = services.filter(item => {
-        // Filter by category
-        if (currentCategory === 'pinned' && !pinnedIds.includes(item.id)) return false;
-        if (currentCategory !== 'all' && currentCategory !== 'pinned' && item.category !== currentCategory) return false;
+      let filtered = bookmarks.filter(item => {
+        if (currentCategory === 'pinned' && !item.is_pinned) return false;
+        if (currentCategory !== 'all' && currentCategory !== 'pinned' && item.category_id !== currentCategory) return false;
 
-        // Filter by search query
         if (searchQuery) {
           const matchName = item.name.toLowerCase().includes(searchQuery);
-          const matchDesc = item.desc.toLowerCase().includes(searchQuery);
+          const matchDesc = (item.desc_text || '').toLowerCase().includes(searchQuery);
           const matchTags = item.tags && item.tags.some(t => t.toLowerCase().includes(searchQuery));
           if (!matchName && !matchDesc && !matchTags) return false;
         }
-
         return true;
       });
 
-      // Sort pinned first when viewing "all"
+      // Sort pinned first on 'all'
       if (currentCategory === 'all' && !searchQuery) {
-        filtered.sort((a, b) => {
-          const aPinned = pinnedIds.includes(a.id);
-          const bPinned = pinnedIds.includes(b.id);
-          if (aPinned && !bPinned) return -1;
-          if (!aPinned && bPinned) return 1;
-          return 0;
-        });
+        filtered.sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
       }
 
       if (filtered.length === 0) {
@@ -1404,24 +1461,22 @@
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 6px;">找不到相符的 AI 工具</div>
-            <div style="font-size: 0.9rem;">試試更換搜尋字詞或點擊「新增工具」加入</div>
+            <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 6px;">找不到相符的網站或工具</div>
+            <div style="font-size: 0.88rem;">點擊「新增連結」或更換分類試試</div>
           </div>
         `;
       } else {
         filtered.forEach(item => {
-          const isPinned = pinnedIds.includes(item.id);
-          const isCustom = item.isCustom;
-
-          const card = document.createElement('a');
+          const cat = categories.find(c => c.id === item.category_id);
+          const card = document.createElement('div');
           card.className = 'ai-card';
-          card.href = item.url;
-          card.target = '_blank';
-          card.rel = 'noopener noreferrer';
+          if (cat && cat.color) {
+            card.style.setProperty('--card-theme-color', cat.color);
+          }
 
           let badgeHtml = '';
           if (item.badge) {
-            badgeHtml = `<span class="badge badge-${item.badgeType || 'hot'}">${item.badge}</span>`;
+            badgeHtml = `<span class="badge badge-${item.badge_type || 'hot'}">${item.badge}</span>`;
           }
 
           let tagsHtml = '';
@@ -1429,36 +1484,43 @@
             tagsHtml = item.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
           }
 
+          // Icon handling
+          let iconHtml = `<img src="https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(item.url)}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'24\\' height=\\'24\\' viewBox=\\'0 0 24 24\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'10\\' fill=\\'%236366f1\\'/></svg>'">`;
+          if (item.icon_url && item.icon_url.startsWith('<svg')) {
+            iconHtml = item.icon_url;
+          }
+
           card.innerHTML = `
-            <div>
+            <div onclick="window.open('${item.url}', '_blank')">
               <div class="card-header">
                 <div class="card-brand">
-                  <div class="card-icon">
-                    ${item.icon || `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>`}
-                  </div>
+                  <div class="card-icon">${iconHtml}</div>
                   <div class="card-info">
                     <h3>${item.name} ${badgeHtml}</h3>
                   </div>
                 </div>
-                <div class="card-actions">
-                  <button class="pin-btn ${isPinned ? 'pinned' : ''}" title="${isPinned ? '取消常用' : '設為常用'}" onclick="togglePin(event, '${item.id}')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="${isPinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+                <div class="card-actions" onclick="event.stopPropagation()">
+                  <button class="card-action-btn ${item.is_pinned ? 'pinned' : ''}" title="${item.is_pinned ? '取消常用' : '設為常用'}" onclick="togglePin('${item.id}')">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="${item.is_pinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                     </svg>
                   </button>
-                  ${isCustom ? `
-                    <button class="delete-btn" title="刪除自訂項目" onclick="deleteCustomItem(event, '${item.id}')">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                      </svg>
-                    </button>
-                  ` : ''}
+                  <button class="card-action-btn" title="編輯連結" onclick="openEditBookmarkModal('${item.id}')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                    </svg>
+                  </button>
+                  <button class="card-action-btn delete" title="刪除連結" onclick="deleteBookmark('${item.id}')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
                 </div>
               </div>
-              <div class="card-desc">${item.desc || '強大的人工智慧輔助工具'}</div>
+              <div class="card-desc">${item.desc_text || '點擊即可前往開啟網站'}</div>
             </div>
-            <div class="card-footer">
+            <div class="card-footer" onclick="window.open('${item.url}', '_blank')">
               <div class="card-tags">${tagsHtml}</div>
               <div class="card-arrow">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1472,10 +1534,10 @@
         });
       }
 
-      // Add "Custom Card" button
+      // Add Card Placeholder
       const addCard = document.createElement('div');
       addCard.className = 'add-card';
-      addCard.onclick = openAddModal;
+      addCard.onclick = openAddBookmarkModal;
       addCard.innerHTML = `
         <div class="add-card-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -1483,56 +1545,343 @@
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
         </div>
-        <div style="font-size: 0.95rem; font-weight: 600;">新增自訂 AI 工具</div>
-        <div style="font-size: 0.78rem; opacity: 0.7;">收藏你個人的專屬 AI 網站</div>
+        <div style="font-size: 0.92rem; font-weight: 600;">新增自訂網站連結</div>
+        <div style="font-size: 0.78rem; opacity: 0.7;">收藏到跨裝置雲端導航庫</div>
       `;
       grid.appendChild(addCard);
     }
 
-    // Update Counts for tabs
-    function updateCounts() {
-      document.getElementById('count-all').innerText = services.length;
-      document.getElementById('count-pinned').innerText = pinnedIds.length;
-      document.getElementById('count-chat').innerText = services.filter(s => s.category === 'chat').length;
-      document.getElementById('count-search').innerText = services.filter(s => s.category === 'search').length;
-      document.getElementById('count-dev').innerText = services.filter(s => s.category === 'dev').length;
-      document.getElementById('count-media').innerText = services.filter(s => s.category === 'media').length;
-      document.getElementById('count-work').innerText = services.filter(s => s.category === 'work').length;
+    // Toggle Pin Status
+    async function togglePin(id) {
+      const bm = bookmarks.find(b => b.id === id);
+      if (bm) {
+        bm.is_pinned = !bm.is_pinned;
+        saveLocalData();
+        renderCategoryTabs();
+        renderGrid();
+
+        if (supabaseClient) {
+          await supabaseClient.from('bookmarks').update({ is_pinned: bm.is_pinned }).eq('id', id);
+        }
+      }
     }
 
-    // Launch AI with prompt
+    // Bookmark Add & Edit Management
+    function updateCategorySelectOptions() {
+      const select = document.getElementById('bmCategory');
+      select.innerHTML = '';
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.innerText = `${cat.icon || '📁'} ${cat.name}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function openAddBookmarkModal() {
+      document.getElementById('bookmarkModalTitle').innerText = '新增網站連結';
+      document.getElementById('bookmarkForm').reset();
+      document.getElementById('bookmarkId').value = '';
+      if (currentCategory !== 'all' && currentCategory !== 'pinned') {
+        document.getElementById('bmCategory').value = currentCategory;
+      }
+      updateCategorySelectOptions();
+      document.getElementById('bookmarkModal').classList.add('show');
+      document.getElementById('bmName').focus();
+    }
+
+    function openEditBookmarkModal(id) {
+      const bm = bookmarks.find(b => b.id === id);
+      if (!bm) return;
+
+      document.getElementById('bookmarkModalTitle').innerText = '編輯網站連結';
+      document.getElementById('bookmarkId').value = bm.id;
+      document.getElementById('bmName').value = bm.name;
+      document.getElementById('bmUrl').value = bm.url;
+      document.getElementById('bmDesc').value = bm.desc_text || '';
+      document.getElementById('bmTags').value = (bm.tags || []).join(', ');
+      document.getElementById('bmBadge').value = bm.badge || '';
+      
+      updateCategorySelectOptions();
+      document.getElementById('bmCategory').value = bm.category_id || categories[0]?.id;
+
+      document.getElementById('bookmarkModal').classList.add('show');
+    }
+
+    function closeBookmarkModal() {
+      document.getElementById('bookmarkModal').classList.remove('show');
+    }
+
+    function autoFillIcon() {
+      // Optional favicon helper
+    }
+
+    document.getElementById('bookmarkForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('bookmarkId').value || ('bm_' + Date.now());
+      const name = document.getElementById('bmName').value.trim();
+      const url = document.getElementById('bmUrl').value.trim();
+      const category_id = document.getElementById('bmCategory').value;
+      const desc_text = document.getElementById('bmDesc').value.trim();
+      const tagsStr = document.getElementById('bmTags').value.trim();
+      const badge = document.getElementById('bmBadge').value.trim();
+
+      const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+      const existingIndex = bookmarks.findIndex(b => b.id === id);
+      const is_pinned = existingIndex >= 0 ? bookmarks[existingIndex].is_pinned : false;
+
+      const newBm = {
+        id,
+        name,
+        url,
+        category_id,
+        desc_text,
+        tags,
+        badge,
+        badge_type: badge ? 'custom' : '',
+        is_pinned,
+        sort_order: Date.now()
+      };
+
+      if (existingIndex >= 0) {
+        bookmarks[existingIndex] = { ...bookmarks[existingIndex], ...newBm };
+      } else {
+        bookmarks.push(newBm);
+      }
+
+      saveLocalData();
+      renderCategoryTabs();
+      renderGrid();
+      closeBookmarkModal();
+
+      if (supabaseClient) {
+        await supabaseClient.from('bookmarks').upsert(newBm);
+      }
+    });
+
+    async function deleteBookmark(id) {
+      if (!confirm('確定要刪除這個網站連結嗎？')) return;
+      bookmarks = bookmarks.filter(b => b.id !== id);
+      saveLocalData();
+      renderCategoryTabs();
+      renderGrid();
+
+      if (supabaseClient) {
+        await supabaseClient.from('bookmarks').delete().eq('id', id);
+      }
+    }
+
+    // Category Manager Modal
+    function openCategoryModal() {
+      renderCategoryManagerList();
+      document.getElementById('categoryModal').classList.add('show');
+    }
+
+    function closeCategoryModal() {
+      document.getElementById('categoryModal').classList.remove('show');
+      renderCategoryTabs();
+      renderGrid();
+      updateCategorySelectOptions();
+    }
+
+    function renderCategoryManagerList() {
+      const list = document.getElementById('categoryManagerList');
+      list.innerHTML = '';
+
+      categories.forEach(cat => {
+        const item = document.createElement('div');
+        item.className = 'category-manager-item';
+        const count = bookmarks.filter(b => b.category_id === cat.id).length;
+
+        item.innerHTML = `
+          <div class="cat-item-left">
+            <span>${cat.icon || '📁'}</span>
+            <span>${cat.name}</span>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">(${count} 個連結)</span>
+          </div>
+          <div class="cat-item-actions">
+            <button class="action-btn" style="height: 30px; padding: 0 8px; font-size: 0.78rem;" onclick="editCategoryName('${cat.id}')">編輯</button>
+            <button class="action-btn" style="height: 30px; padding: 0 8px; font-size: 0.78rem; color: #ef4444;" onclick="deleteCategory('${cat.id}')">刪除</button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    async function addNewCategory() {
+      const name = document.getElementById('newCatName').value.trim();
+      const icon = document.getElementById('newCatIcon').value.trim() || '📁';
+      if (!name) return alert('請輸入分類名稱！');
+
+      const id = 'cat_' + Date.now();
+      const newCat = {
+        id,
+        name,
+        icon,
+        color: '#6366f1',
+        sort_order: categories.length + 1
+      };
+
+      categories.push(newCat);
+      saveLocalData();
+      renderCategoryManagerList();
+      document.getElementById('newCatName').value = '';
+
+      if (supabaseClient) {
+        await supabaseClient.from('categories').upsert(newCat);
+      }
+    }
+
+    async function editCategoryName(catId) {
+      const cat = categories.find(c => c.id === catId);
+      if (!cat) return;
+      const newName = prompt('請輸入新的分類名稱：', cat.name);
+      if (newName && newName.trim()) {
+        cat.name = newName.trim();
+        const newIcon = prompt('請輸入分類 Emoji 圖示：', cat.icon || '📁');
+        if (newIcon) cat.icon = newIcon.trim();
+
+        saveLocalData();
+        renderCategoryManagerList();
+
+        if (supabaseClient) {
+          await supabaseClient.from('categories').update({ name: cat.name, icon: cat.icon }).eq('id', catId);
+        }
+      }
+    }
+
+    async function deleteCategory(catId) {
+      if (categories.length <= 1) return alert('至少需保留一個分類！');
+      const cat = categories.find(c => c.id === catId);
+      if (!confirm(`確定要刪除「${cat.name}」分類嗎？此分類下的連結將會被移至第一個分類。`)) return;
+
+      categories = categories.filter(c => c.id !== catId);
+      const fallbackCatId = categories[0].id;
+
+      // Reassign bookmarks
+      bookmarks.forEach(bm => {
+        if (bm.category_id === catId) {
+          bm.category_id = fallbackCatId;
+        }
+      });
+
+      saveLocalData();
+      renderCategoryManagerList();
+
+      if (supabaseClient) {
+        await supabaseClient.from('categories').delete().eq('id', catId);
+        await supabaseClient.from('bookmarks').update({ category_id: fallbackCatId }).eq('category_id', catId);
+      }
+    }
+
+    // Cloud Modal (Supabase)
+    function openCloudModal() {
+      document.getElementById('supabaseUrlInput').value = localStorage.getItem('ai_portal_sb_url') || '';
+      document.getElementById('supabaseKeyInput').value = localStorage.getItem('ai_portal_sb_key') || '';
+      document.getElementById('cloudModal').classList.add('show');
+    }
+
+    function closeCloudModal() {
+      document.getElementById('cloudModal').classList.remove('show');
+    }
+
+    function saveCloudConfig() {
+      const url = document.getElementById('supabaseUrlInput').value.trim();
+      const key = document.getElementById('supabaseKeyInput').value.trim();
+
+      if (!url || !key) {
+        return alert('請填寫 Supabase URL 與 Anon Key！');
+      }
+
+      localStorage.setItem('ai_portal_sb_url', url);
+      localStorage.setItem('ai_portal_sb_key', key);
+
+      initSupabase();
+      closeCloudModal();
+      alert('已儲存雲端設定並開始同步！');
+    }
+
+    function disconnectCloud() {
+      if (confirm('確定要清除雲端同步設定嗎？將回到本機儲存模式。')) {
+        localStorage.removeItem('ai_portal_sb_url');
+        localStorage.removeItem('ai_portal_sb_key');
+        supabaseClient = null;
+        isCloudConnected = false;
+        updateCloudStatusUI(false);
+        closeCloudModal();
+      }
+    }
+
+    function copySupabaseSQL() {
+      const sql = document.getElementById('supabaseSqlCode').innerText;
+      navigator.clipboard.writeText(sql).then(() => {
+        alert('已複製 SQL 指令！請至 Supabase Dashboard ➔ SQL Editor 執行以建立資料表。');
+      });
+    }
+
+    // Prompt Launcher AI
     function launchAI(engine) {
       const query = document.getElementById('searchInput').value.trim();
       let targetUrl = '';
-
       switch(engine) {
-        case 'gemini':
-          targetUrl = query ? `https://gemini.google.com/app?prompt=${encodeURIComponent(query)}` : 'https://gemini.google.com/';
-          break;
-        case 'chatgpt':
-          targetUrl = query ? `https://chatgpt.com/?q=${encodeURIComponent(query)}` : 'https://chatgpt.com/';
-          break;
-        case 'claude':
-          targetUrl = 'https://claude.ai/new';
-          if (query) {
-            navigator.clipboard.writeText(query);
-          }
-          break;
-        case 'deepseek':
-          targetUrl = 'https://chat.deepseek.com/';
-          if (query) {
-            navigator.clipboard.writeText(query);
-          }
-          break;
-        case 'perplexity':
-          targetUrl = query ? `https://www.perplexity.ai/search?q=${encodeURIComponent(query)}` : 'https://www.perplexity.ai/';
-          break;
-        case 'google':
-          targetUrl = query ? `https://www.google.com/search?q=${encodeURIComponent(query)}` : 'https://www.google.com/';
-          break;
+        case 'gemini': targetUrl = query ? `https://gemini.google.com/app?prompt=${encodeURIComponent(query)}` : 'https://gemini.google.com/'; break;
+        case 'chatgpt': targetUrl = query ? `https://chatgpt.com/?q=${encodeURIComponent(query)}` : 'https://chatgpt.com/'; break;
+        case 'claude': targetUrl = 'https://claude.ai/new'; if (query) navigator.clipboard.writeText(query); break;
+        case 'deepseek': targetUrl = 'https://chat.deepseek.com/'; if (query) navigator.clipboard.writeText(query); break;
+        case 'perplexity': targetUrl = query ? `https://www.perplexity.ai/search?q=${encodeURIComponent(query)}` : 'https://www.perplexity.ai/'; break;
+        case 'google': targetUrl = query ? `https://www.google.com/search?q=${encodeURIComponent(query)}` : 'https://www.google.com/'; break;
       }
-
       window.open(targetUrl, '_blank');
+    }
+
+    // JSON Export / Import
+    function exportDataJSON() {
+      const data = {
+        exported_at: new Date().toISOString(),
+        categories,
+        bookmarks
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ai_portal_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importDataJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const json = JSON.parse(e.target.result);
+          if (json.categories && json.bookmarks) {
+            if (confirm('確定要還原此 JSON 備份檔嗎？這將會合併並覆蓋現有資料。')) {
+              categories = json.categories;
+              bookmarks = json.bookmarks;
+              saveLocalData();
+              renderCategoryTabs();
+              renderGrid();
+              updateCategorySelectOptions();
+
+              if (supabaseClient) {
+                await supabaseClient.from('categories').upsert(categories);
+                await supabaseClient.from('bookmarks').upsert(bookmarks);
+              }
+              alert('JSON 備份資料還原成功！');
+            }
+          } else {
+            alert('JSON 格式不正確！');
+          }
+        } catch (err) {
+          alert('解析 JSON 檔案失敗：' + err.message);
+        }
+      };
+      reader.readAsText(file);
     }
 
     // Real-time Clock
@@ -1547,44 +1896,17 @@
     updateClock();
 
     // Search filter input listener
-    document.getElementById('searchInput').addEventListener('input', () => {
-      renderGrid();
-    });
-
+    document.getElementById('searchInput').addEventListener('input', renderGrid);
     document.getElementById('searchInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        launchAI('gemini');
-      }
+      if (e.key === 'Enter') launchAI('gemini');
     });
 
-    // Keyboard shortcut '/' to focus search
     window.addEventListener('keydown', (e) => {
       if (e.key === '/' && document.activeElement !== document.getElementById('searchInput')) {
         e.preventDefault();
         document.getElementById('searchInput').focus();
         document.getElementById('searchInput').select();
       }
-    });
-
-    // Category Tabs click
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentCategory = btn.getAttribute('data-category');
-        
-        const titles = {
-          all: '所有 AI 工具',
-          pinned: '⭐ 我的常用收藏',
-          chat: '💬 旗艦對話助手',
-          search: '🔍 搜尋與深度研究',
-          dev: '💻 程式開發與架構',
-          media: '🎨 繪圖與多媒體創作',
-          work: '⚡ 辦公與生產力效率'
-        };
-        document.getElementById('currentCategoryTitle').innerText = titles[currentCategory] || '所有 AI 工具';
-        renderGrid();
-      });
     });
 
     // Theme Toggle
@@ -1598,74 +1920,17 @@
       localStorage.setItem('ai_portal_theme', currentTheme);
     });
 
-    // Modal controls
-    function openAddModal() {
-      document.getElementById('addModal').classList.add('show');
-      document.getElementById('customName').focus();
-    }
-
-    function closeAddModal() {
-      document.getElementById('addModal').classList.remove('show');
-      document.getElementById('customAiForm').reset();
-    }
-
-    function openGuideModal() {
-      document.getElementById('currentFilePath').innerText = window.location.href;
-      document.getElementById('guideModal').classList.add('show');
-    }
-
-    function closeGuideModal() {
-      document.getElementById('guideModal').classList.remove('show');
-    }
-
-    function copyFilePath() {
-      const path = window.location.href;
-      navigator.clipboard.writeText(path).then(() => {
-        alert('已複製網址到剪貼簿！可直接貼到 Chrome 起始頁面設定中。');
-      });
-    }
-
-    // Add Custom AI Form Submit
-    document.getElementById('customAiForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = document.getElementById('customName').value.trim();
-      const url = document.getElementById('customUrl').value.trim();
-      const desc = document.getElementById('customDesc').value.trim();
-      const category = document.getElementById('customCategory').value;
-
-      if (!name || !url) return;
-
-      const newItem = {
-        id: 'custom_' + Date.now(),
-        name: name,
-        url: url,
-        desc: desc || '自訂 AI 站點',
-        category: category,
-        badge: '自訂',
-        badgeType: 'custom',
-        isCustom: true,
-        tags: ['自訂收藏'],
-        icon: `<svg viewBox="0 0 24 24" fill="#a855f7"><circle cx="12" cy="12" r="9"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">${name.charAt(0).toUpperCase()}</text></svg>`
-      };
-
-      let customServices = JSON.parse(localStorage.getItem('ai_portal_custom') || '[]');
-      customServices.push(newItem);
-      localStorage.setItem('ai_portal_custom', JSON.stringify(customServices));
-
-      closeAddModal();
-      initData();
-    });
-
-    // Close modal on click backdrop
+    // Close modals when clicking backdrop
     window.addEventListener('click', (e) => {
       if (e.target.classList.contains('modal-backdrop')) {
-        closeAddModal();
-        closeGuideModal();
+        closeBookmarkModal();
+        closeCategoryModal();
+        closeCloudModal();
       }
     });
 
-    // Startup
-    initData();
+    // Bootstrap
+    initApp();
   </script>
 </body>
 </html>
